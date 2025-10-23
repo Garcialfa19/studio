@@ -1,28 +1,12 @@
 
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import Image from "next/image";
 import { Phone, Mail, MapPin, Facebook, Instagram } from "lucide-react";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { submitContactForm } from "@/lib/actions";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-
-const contactSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
-  email: z.string().email("Por favor, introduce un correo electrónico válido."),
-  message: z.string().min(10, "El mensaje debe tener al menos 10 caracteres."),
-});
-
-type ContactFormValues = z.infer<typeof contactSchema>;
 
 const contactInfo = [
   { icon: Phone, text: "+506 2494-1234", href: "tel:+50624941234" },
@@ -36,40 +20,13 @@ const socialLinks = [
 ];
 
 export function ContactSection() {
-  const { toast } = useToast();
   const mapImage = PlaceHolderImages.find(img => img.id === 'map-placeholder');
-
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-    },
-  });
-
-  const onSubmit = async (data: ContactFormValues) => {
-    const result = await submitContactForm(data);
-    if (result.success) {
-      toast({
-        title: "Mensaje Enviado",
-        description: "Gracias por contactarnos. Te responderemos pronto.",
-      });
-      form.reset();
-    } else {
-      toast({
-        title: "Error al enviar",
-        description: result.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <Section id="contacto">
       <SectionHeader title="Contacto" description="Estamos aquí para ayudarte. Ponte en contacto con nosotros." />
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <Card className="flex flex-col">
+      <div className="flex justify-center">
+        <Card className="flex flex-col max-w-2xl w-full">
           <CardContent className="p-8 flex-grow flex flex-col">
             <h3 className="text-2xl font-headline font-semibold mb-6">Información de Contacto</h3>
             <ul className="space-y-4 text-lg mb-8">
@@ -105,58 +62,6 @@ export function ContactSection() {
                 />
               </div>
             )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-8">
-             <h3 className="text-2xl font-headline font-semibold mb-6">Envíanos un Mensaje</h3>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Tu nombre" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo Electrónico</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="tu@correo.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mensaje</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Escribe tu consulta aquí..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
-                  {form.formState.isSubmitting ? "Enviando..." : "Enviar Mensaje"}
-                </Button>
-              </form>
-            </Form>
           </CardContent>
         </Card>
       </div>
