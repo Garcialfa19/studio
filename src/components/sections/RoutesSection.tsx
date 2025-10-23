@@ -9,6 +9,7 @@ import { Section, SectionHeader } from "@/components/shared/Section";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
 import type { Route } from "@/lib/definitions";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Separator } from "../ui/separator";
 
 type RoutesSectionProps = {
   initialRoutes: Route[];
@@ -61,7 +62,7 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
           {filteredRoutes.map((route) => (
             <Card
               key={route.id}
-              className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
+              className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col"
               onClick={() => setSelectedRoute(route)}
               onKeyDown={(e) => e.key === 'Enter' && setSelectedRoute(route)}
               tabIndex={0}
@@ -79,12 +80,12 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
                     />
                  </div>
               )}
-              <CardContent className="p-4">
-                <h3 className="font-headline text-xl font-bold">{route.nombre}</h3>
-                <p className="text-sm text-muted-foreground mb-4">Por Churuca</p>
-
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <div className="flex items-center gap-2">
+              <CardContent className="p-4 flex flex-col flex-grow">
+                <h3 className="font-headline text-2xl font-bold">{route.nombre}</h3>
+                <p className="text-muted-foreground mb-3">Por Churuca</p>
+                <Separator className="mb-3" />
+                <div className="flex items-center justify-between mt-auto">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Bus className="h-5 w-5 text-primary" />
                     <span>{route.duracionMin} Min</span>
                   </div>
