@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { Bus, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
 import type { Route } from "@/lib/definitions";
@@ -27,6 +27,8 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
   }, [initialRoutes, searchTerm]);
   
   const scheduleImages = PlaceHolderImages.filter(img => img.id.startsWith('schedule-'));
+  const routeImage = PlaceHolderImages.find(img => img.id === 'route-card-image');
+
 
   const getImageUrl = (route: Route) => {
     const foundImage = PlaceHolderImages.find(img => img.id === route.imagenHorarioUrl);
@@ -59,25 +61,36 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
           {filteredRoutes.map((route) => (
             <Card
               key={route.id}
-              className="flex flex-col cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
+              className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
               onClick={() => setSelectedRoute(route)}
               onKeyDown={(e) => e.key === 'Enter' && setSelectedRoute(route)}
               tabIndex={0}
               role="button"
               aria-label={`Ver horario de ${route.nombre}`}
             >
-              <CardHeader>
-                <CardTitle className="font-headline text-xl">{route.nombre}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-end">
+              {routeImage && (
+                 <div className="relative aspect-[16/10] w-full">
+                    <Image
+                      src={routeImage.imageUrl}
+                      alt={`Autobús de la ruta ${route.nombre}`}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={routeImage.imageHint}
+                    />
+                 </div>
+              )}
+              <CardContent className="p-4">
+                <h3 className="font-headline text-xl font-bold">{route.nombre}</h3>
+                <p className="text-sm text-muted-foreground mb-4">Por Churuca</p>
+
                 <div className="flex items-center justify-between text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span>{route.duracionMin} min</span>
+                    <Bus className="h-5 w-5 text-primary" />
+                    <span>{route.duracionMin} Min</span>
                   </div>
-                  <Badge variant="secondary" className="text-lg font-bold text-primary">
+                  <span className="text-lg font-bold text-foreground">
                     ₡{route.tarifaCRC.toLocaleString('es-CR')}
-                  </Badge>
+                  </span>
                 </div>
               </CardContent>
             </Card>
