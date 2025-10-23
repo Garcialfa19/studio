@@ -18,9 +18,15 @@ type RoutesSectionProps = {
 export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
 
-  const filteredRoutes = useMemo(() => {
+  const greciaRoutes = useMemo(() => {
     return initialRoutes.filter(
-      (route) => route.activo
+      (route) => route.activo && route.nombre.toLowerCase().includes('grecia')
+    );
+  }, [initialRoutes]);
+  
+  const sarchiRoutes = useMemo(() => {
+    return initialRoutes.filter(
+      (route) => route.activo && route.nombre.toLowerCase().includes('sarchí')
     );
   }, [initialRoutes]);
   
@@ -37,15 +43,19 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
     return scheduleImages[0]?.imageUrl || "https://picsum.photos/seed/default/800/1200";
   }
 
-  return (
-    <Section id="rutas" className="bg-card">
-      <SectionHeader
-        title="Grecia"
-      />
+  const RouteGrid = ({ routes }: { routes: Route[] }) => {
+    if (routes.length === 0) {
+      return (
+         <div className="text-center py-12">
+          <Bus className="mx-auto h-12 w-12 text-muted-foreground" />
+          <p className="mt-4 text-lg text-muted-foreground">No se encontraron rutas activas.</p>
+        </div>
+      )
+    }
 
-      {filteredRoutes.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredRoutes.map((route) => (
+    return (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {routes.map((route) => (
             <Card
               key={route.id}
               className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col"
@@ -83,12 +93,24 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
             </Card>
           ))}
         </div>
-      ) : (
-        <div className="text-center py-12">
-          <Bus className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 text-lg text-muted-foreground">No se encontraron rutas con ese nombre.</p>
-        </div>
-      )}
+    )
+  }
+
+  return (
+    <Section id="rutas" className="bg-card">
+      <SectionHeader
+        title="Grecia"
+        className="text-left mb-6"
+      />
+      <Separator className="mb-8" />
+      <RouteGrid routes={greciaRoutes} />
+
+      <SectionHeader
+        title="Sarchí"
+        className="text-left mb-6 mt-16"
+      />
+      <Separator className="mb-8" />
+      <RouteGrid routes={sarchiRoutes} />
 
       <ScheduleModal
         route={selectedRoute}
@@ -99,4 +121,3 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
     </Section>
   );
 }
-
