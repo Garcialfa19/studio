@@ -70,17 +70,17 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
               aria-label={`Ver horario de ${route.nombre}`}
             >
               {routeImage && (
-                 <div className="relative aspect-[16/10] w-full">
+                 <div className="relative aspect-[16/10] w-full p-4">
                     <Image
                       src={routeImage.imageUrl}
                       alt={`Autobús de la ruta ${route.nombre}`}
                       fill
-                      className="object-cover"
+                      className="object-cover rounded-md"
                       data-ai-hint={routeImage.imageHint}
                     />
                  </div>
               )}
-              <CardContent className="p-4 flex flex-col flex-grow">
+              <CardContent className="p-4 pt-0 flex flex-col flex-grow">
                 <h3 className="font-headline text-2xl font-bold">{route.nombre}</h3>
                 <p className="text-muted-foreground mb-3">Por Churuca</p>
                 <Separator className="mb-3" />
