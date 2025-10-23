@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "history-hero",
+      "description": "An old bus representing the company's history.",
+      "imageUrl": "https://images.unsplash.com/photo-1648875175530-c0c1b682763d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxvbGQlMjBidXN8ZW58MHx8fHwxNzYxMjU2NTc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "old bus"
+    },
+    {
+      "id": "schedule-placeholder-1",
+      "description": "Placeholder for a bus schedule.",
+      "imageUrl": "https://images.unsplash.com/photo-1755699877166-c236690d9fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bus schedule"
+    },
+    {
+      "id": "schedule-placeholder-2",
+      "description": "Another placeholder for a bus schedule.",
+      "imageUrl": "https://images.unsplash.com/photo-1620841946140-f6b5e40ce49a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bus schedule"
+    },
+    {
+      "id": "map-placeholder",
+      "description": "Placeholder for a map showing office location.",
+      "imageUrl": "https://images.unsplash.com/photo-1520299607509-dcd935f9a839?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYXB8ZW58MHx8fHwxNzYxMTM1NTc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "map"
+    }
+  ]
 }

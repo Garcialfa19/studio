@@ -1,0 +1,39 @@
+
+[
+  {
+    "id": "grecia-poas",
+    "nombre": "Grecia – Poás",
+    "duracionMin": 60,
+    "tarifaCRC": 650,
+    "imagenHorarioUrl": "schedule-placeholder-1",
+    "activo": true,
+    "lastUpdated": "2024-07-28T10:00:00Z"
+  },
+  {
+    "id": "sarchi-poas",
+    "nombre": "Sarchí – Poás",
+    "duracionMin": 60,
+    "tarifaCRC": 650,
+    "imagenHorarioUrl": "schedule-placeholder-2",
+    "activo": true,
+    "lastUpdated": "2024-07-28T10:05:00Z"
+  },
+  {
+    "id": "grecia-sarchi",
+    "nombre": "Grecia – Sarchí",
+    "duracionMin": 30,
+    "tarifaCRC": 450,
+    "imagenHorarioUrl": "schedule-placeholder-1",
+    "activo": true,
+    "lastUpdated": "2024-07-28T10:10:00Z"
+  },
+  {
+    "id": "naranjo-grecia",
+    "nombre": "Naranjo – Grecia",
+    "duracionMin": 45,
+    "tarifaCRC": 500,
+    "imagenHorarioUrl": "schedule-placeholder-2",
+    "activo": false,
+    "lastUpdated": "2024-07-28T10:15:00Z"
+  }
+]
