@@ -43,7 +43,7 @@ export async function submitContactForm(data: z.infer<typeof contactSchema>) {
 // --- Auth Actions ---
 const AUTH_COOKIE_NAME = "asg-auth";
 
-export async function authenticate(formData: FormData) {
+export async function authenticate(prevState: { error: string } | undefined, formData: FormData) {
     const username = formData.get("username");
     const password = formData.get("password");
 
