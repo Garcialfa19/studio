@@ -54,6 +54,11 @@ export function Header() {
       )}
     >
       <div className="container flex h-16 items-center justify-between">
+        {/* Desktop Nav */}
+        <nav className="hidden items-center gap-2 md:flex">
+          <NavLinks />
+        </nav>
+
         {/* Mobile Nav */}
         <div className="md:hidden">
           <Sheet>
@@ -70,11 +75,6 @@ export function Header() {
             </SheetContent>
           </Sheet>
         </div>
-        
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-2 md:flex">
-          <NavLinks />
-        </nav>
 
         <Link href="/" aria-label="Ir a la página de inicio">
           <Logo />
