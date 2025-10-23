@@ -176,11 +176,6 @@ export async function deleteRoute(id: string) {
 const alertSchema = z.object({
   id: z.string().optional(),
   titulo: z.string().min(3, "El título es requerido."),
-  mensaje: z.string().min(10, "El mensaje es requerido."),
-  severidad: z.enum(["info", "warning", "critical"]),
-  iniciaISO: z.string().datetime("Formato de fecha inválido."),
-  terminaISO: z.string().datetime("Formato de fecha inválido."),
-  activo: z.coerce.boolean(),
 });
 
 export async function saveAlert(formData: FormData) {
@@ -193,25 +188,18 @@ export async function saveAlert(formData: FormData) {
 
   const alerts = await readData<Alert>(alertsPath);
   const data = validation.data;
+
+  // Since we removed editing, we only handle creation.
   const newAlert = {
-    ...data,
+    titulo: data.titulo,
+    id: data.titulo.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
     lastUpdated: new Date().toISOString(),
   };
 
-  if (data.id) { // Update
-    const index = alerts.findIndex(a => a.id === data.id);
-    if (index !== -1) {
-      alerts[index] = { ...alerts[index], ...newAlert };
-    }
-  } else { // Create
-    alerts.push({
-      ...newAlert,
-      id: newAlert.titulo.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-    });
-  }
-
+  alerts.push(newAlert);
+  
   await writeData(alertsPath, alerts);
-revalidatePath("/");
+  revalidatePath("/");
   revalidatePath("/alertas");
   revalidatePath("/admin/dashboard");
   return { success: true };

@@ -1,33 +1,17 @@
-
 [
   {
     "id": "retraso-mantenimiento-202407",
-    "titulo": "Retraso por mantenimiento",
-    "mensaje": "La ruta Grecia - Poás podría experimentar retrasos de hasta 20 minutos debido a mantenimiento en la vía. Agradecemos su comprensión.",
-    "severidad": "warning",
-    "iniciaISO": "2024-07-28T08:00:00Z",
-    "terminaISO": "2024-07-29T18:00:00Z",
-    "activo": true,
-    "lastUpdated": "2024-07-28T09:00:00Z"
+    "titulo": "La ruta Grecia - Poás podría experimentar retrasos de hasta 20 minutos debido a mantenimiento en la vía.",
+    "lastUpdated": "2025-10-23T22:48:31.247Z"
   },
   {
     "id": "servicio-reducido-domingo-202408",
-    "titulo": "Servicio reducido próximo domingo",
-    "mensaje": "El próximo domingo el servicio de todas las rutas operará con horario reducido de 8:00 a.m. a 5:00 p.m.",
-    "severidad": "info",
-    "iniciaISO": "2024-08-04T08:00:00Z",
-    "terminaISO": "2024-08-04T17:00:00Z",
-    "activo": true,
+    "titulo": "El próximo domingo el servicio de todas las rutas operará con horario reducido de 8:00 a.m. a 5:00 p.m.",
     "lastUpdated": "2024-07-28T09:05:00Z"
   },
   {
     "id": "desvio-centro-grecia-202407",
-    "titulo": "Desvío en el centro de Grecia",
-    "mensaje": "Por actividades cívicas, habrá un desvío temporal en el centro de Grecia. Las paradas cercanas al parque central no estarán disponibles.",
-    "severidad": "critical",
-    "iniciaISO": "2024-07-30T10:00:00Z",
-    "terminaISO": "2024-07-30T14:00:00Z",
-    "activo": false,
+    "titulo": "Por actividades cívicas, habrá un desvío temporal en el centro de Grecia. Las paradas cercanas al parque central no estarán disponibles.",
     "lastUpdated": "2024-07-28T09:10:00Z"
   }
 ]
