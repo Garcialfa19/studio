@@ -1,6 +1,7 @@
 export type Route = {
   id: string;
   nombre: string;
+  category: "grecia" | "sarchi";
   duracionMin: number;
   tarifaCRC: number;
   imagenHorarioUrl: string;

@@ -88,6 +88,7 @@ export async function logout() {
 const routeFormSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(3, "El nombre es requerido."),
+  category: z.enum(["grecia", "sarchi"]),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
   activo: z.coerce.boolean(),
@@ -133,6 +134,7 @@ export async function saveRoute(formData: FormData) {
 
     const routeData: Omit<Route, 'id'> = {
         nombre: data.nombre,
+        category: data.category,
         duracionMin: data.duracionMin,
         tarifaCRC: data.tarifaCRC,
         activo: data.activo,

@@ -18,13 +18,13 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
 
   const greciaRoutes = useMemo(() => {
     return initialRoutes.filter(
-      (route) => route.activo && route.nombre.toLowerCase().includes('grecia')
+      (route) => route.activo && route.category === 'grecia'
     );
   }, [initialRoutes]);
   
   const sarchiRoutes = useMemo(() => {
     return initialRoutes.filter(
-      (route) => route.activo && route.nombre.toLowerCase().includes('sarchí')
+      (route) => route.activo && route.category === 'sarchi'
     );
   }, [initialRoutes]);
 

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Edit, Trash2, ExternalLink } from "lucide-react";
@@ -56,6 +57,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
+  category: z.enum(["grecia", "sarchi"], { required_error: "La categoría es requerida."}),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
   imagenHorario: z
@@ -92,6 +94,7 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
     defaultValues: {
       id: route?.id || "",
       nombre: route?.nombre || "",
+      category: route?.category || "grecia",
       duracionMin: route?.duracionMin || 0,
       tarifaCRC: route?.tarifaCRC || 0,
       activo: route?.activo ?? true,
@@ -115,6 +118,7 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
     
     formData.append('id', data.id || '');
     formData.append('nombre', data.nombre);
+    formData.append('category', data.category);
     formData.append('duracionMin', String(data.duracionMin));
     formData.append('tarifaCRC', String(data.tarifaCRC));
     formData.append('activo', String(data.activo));
@@ -138,6 +142,19 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
             <FormControl><Input {...field} /></FormControl>
             <FormMessage />
           </FormItem>
+        )} />
+         <FormField control={form.control} name="category" render={({ field }) => (
+          <FormItem><FormLabel>Categoría</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Selecciona una categoría"/></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="grecia">Grecia</SelectItem>
+                <SelectItem value="sarchi">Sarchí</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormDescription>La sección donde aparecerá esta ruta.</FormDescription>
+            <FormMessage />
+            </FormItem>
         )} />
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="duracionMin" render={({ field }) => (
@@ -242,6 +259,7 @@ export default function RoutesManager({ routes }: { routes: Route[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead>Categoría</TableHead>
               <TableHead>Duración</TableHead>
               <TableHead>Tarifa</TableHead>
               <TableHead>Estado</TableHead>
@@ -252,6 +270,7 @@ export default function RoutesManager({ routes }: { routes: Route[] }) {
             {routes.map((route) => (
               <TableRow key={route.id}>
                 <TableCell className="font-medium">{route.nombre}</TableCell>
+                <TableCell className="capitalize">{route.category}</TableCell>
                 <TableCell>{route.duracionMin} min</TableCell>
                 <TableCell>₡{route.tarifaCRC}</TableCell>
                 <TableCell>
