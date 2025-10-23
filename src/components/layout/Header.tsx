@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -14,9 +15,9 @@ import {
 } from "@/components/ui/sheet";
 
 const navLinks = [
-  { href: "#alertas", label: "Alertas" },
-  { href: "#historia", label: "Historia" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "/alertas", label: "Alertas" },
+  { href: "/historia", label: "Historia" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 export function Header() {
@@ -29,19 +30,14 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
-  };
   
   const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
       {navLinks.map(({ href, label }) => {
-        const LinkComponent = isMobile ? SheetClose : 'a';
+        const LinkComponent = isMobile ? SheetClose : Link;
         return (
           <Button key={href} variant="ghost" asChild>
-            <LinkComponent asChild={!isMobile} href={href} onClick={(e: any) => scrollToSection(e, href)}>
+            <LinkComponent href={href}>
               {label}
             </LinkComponent>
           </Button>
@@ -58,11 +54,6 @@ export function Header() {
       )}
     >
       <div className="container flex h-16 items-center justify-between">
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-2 md:flex">
-          <NavLinks />
-        </nav>
-
         {/* Mobile Nav */}
         <div className="md:hidden">
           <Sheet>
@@ -79,8 +70,13 @@ export function Header() {
             </SheetContent>
           </Sheet>
         </div>
+        
+        {/* Desktop Nav */}
+        <nav className="hidden items-center gap-2 md:flex">
+          <NavLinks />
+        </nav>
 
-        <Link href="#rutas" onClick={(e) => scrollToSection(e, '#rutas')} aria-label="Ir a la sección de rutas">
+        <Link href="/" aria-label="Ir a la página de inicio">
           <Logo />
         </Link>
       </div>

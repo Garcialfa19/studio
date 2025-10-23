@@ -1,17 +1,14 @@
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { RoutesSection } from "@/components/sections/RoutesSection";
-import { getRoutes } from "@/lib/data-service";
+import { HistorySection } from "@/components/sections/HistorySection";
 
-export default async function Home() {
-  const routes = await getRoutes();
-
+export default function HistoriaPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <RoutesSection initialRoutes={routes} />
+        <HistorySection />
       </main>
       <Footer />
     </div>
