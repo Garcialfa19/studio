@@ -25,6 +25,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -49,12 +50,36 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
-  imagenHorarioUrl: z.string().min(1, "Se requiere el ID de la imagen de placeholder (ej: 'schedule-placeholder-1')."),
+  imagenHorario: z
+    .any()
+    .refine(
+        (files) => files?.[0]?.size <= MAX_FILE_SIZE || files?.[0] === undefined,
+        `El tamaño máximo es 5MB.`
+    )
+    .refine(
+        (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type) || files?.[0] === undefined,
+        "Solo se aceptan formatos .jpg, .jpeg, .png y .webp."
+    )
+    .optional(),
+  imagenTarjeta: z
+    .any()
+    .refine(
+        (files) => files?.[0]?.size <= MAX_FILE_SIZE || files?.[0] === undefined,
+        `El tamaño máximo es 5MB.`
+    )
+    .refine(
+        (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type) || files?.[0] === undefined,
+        "Solo se aceptan formatos .jpg, .jpeg, .png y .webp."
+    )
+    .optional(),
   activo: z.boolean(),
 });
 
@@ -69,25 +94,38 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
       nombre: route?.nombre || "",
       duracionMin: route?.duracionMin || 0,
       tarifaCRC: route?.tarifaCRC || 0,
-      imagenHorarioUrl: route?.imagenHorarioUrl || "",
       activo: route?.activo ?? true,
     },
   });
 
-  const { formState } = form;
+  const { formState, register } = form;
+  const imagenHorarioRef = register("imagenHorario");
+  const imagenTarjetaRef = register("imagenTarjeta");
+
 
   async function onSubmit(data: RouteFormValues) {
     const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, String(value));
-    });
+    // We only append the file if it's a FileList with a file.
+    if (data.imagenHorario && data.imagenHorario.length > 0) {
+      formData.append("imagenHorario", data.imagenHorario[0]);
+    }
+    if (data.imagenTarjeta && data.imagenTarjeta.length > 0) {
+      formData.append("imagenTarjeta", data.imagenTarjeta[0]);
+    }
+    
+    formData.append('id', data.id || '');
+    formData.append('nombre', data.nombre);
+    formData.append('duracionMin', String(data.duracionMin));
+    formData.append('tarifaCRC', String(data.tarifaCRC));
+    formData.append('activo', String(data.activo));
+
 
     const result = await saveRoute(formData);
     if (result.success) {
       toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
       onOpenChange(false);
     } else {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la ruta." });
+      toast({ variant: "destructive", title: "Error", description: result.error?.toString() || "No se pudo guardar la ruta." });
     }
   }
 
@@ -117,13 +155,38 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
             </FormItem>
           )} />
         </div>
-        <FormField control={form.control} name="imagenHorarioUrl" render={({ field }) => (
-          <FormItem>
-            <FormLabel>ID de Imagen de Horario</FormLabel>
-            <FormControl><Input {...field} placeholder="ej. schedule-placeholder-1" /></FormControl>
-             <FormMessage />
-          </FormItem>
-        )} />
+         <FormField
+          control={form.control}
+          name="imagenHorario"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Imagen del Horario</FormLabel>
+              <FormControl>
+                <Input type="file" {...imagenHorarioRef} />
+              </FormControl>
+              <FormDescription>
+                {route?.imagenHorarioUrl && !field.value?.[0] ? `Actual: ${route.imagenHorarioUrl}` : "Sube una nueva imagen para el horario."}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="imagenTarjeta"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Imagen de la Tarjeta</FormLabel>
+              <FormControl>
+                <Input type="file" {...imagenTarjetaRef} />
+              </FormControl>
+              <FormDescription>
+                 {route?.imagenTarjetaUrl && !field.value?.[0] ? `Actual: ${route.imagenTarjetaUrl}` : "Sube una nueva imagen para la tarjeta de la ruta."}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField control={form.control} name="activo" render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="space-y-0.5">

@@ -1,11 +1,11 @@
-
 [
   {
     "id": "grecia-poas",
     "nombre": "Grecia – Poás",
     "duracionMin": 60,
     "tarifaCRC": 650,
-    "imagenHorarioUrl": "schedule-placeholder-1",
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
     "activo": true,
     "lastUpdated": "2024-07-28T10:00:00Z"
   },
@@ -14,7 +14,8 @@
     "nombre": "Sarchí – Poás",
     "duracionMin": 60,
     "tarifaCRC": 650,
-    "imagenHorarioUrl": "schedule-placeholder-2",
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
     "activo": true,
     "lastUpdated": "2024-07-28T10:05:00Z"
   },
@@ -23,7 +24,8 @@
     "nombre": "Grecia – Sarchí",
     "duracionMin": 30,
     "tarifaCRC": 450,
-    "imagenHorarioUrl": "schedule-placeholder-1",
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
     "activo": true,
     "lastUpdated": "2024-07-28T10:10:00Z"
   },
@@ -32,8 +34,19 @@
     "nombre": "Naranjo – Grecia",
     "duracionMin": 45,
     "tarifaCRC": 500,
-    "imagenHorarioUrl": "schedule-placeholder-2",
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
     "activo": false,
     "lastUpdated": "2024-07-28T10:15:00Z"
+  },
+  {
+    "id": "san-pedro---grecia-1761258305983",
+    "nombre": "San Pedro - Grecia",
+    "duracionMin": 130,
+    "tarifaCRC": 1500,
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "activo": true,
+    "lastUpdated": "2025-10-23T22:25:05.983Z"
   }
 ]

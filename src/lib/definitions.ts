@@ -4,6 +4,7 @@ export type Route = {
   duracionMin: number;
   tarifaCRC: number;
   imagenHorarioUrl: string;
+  imagenTarjetaUrl: string;
   activo: boolean;
   lastUpdated: string;
 };

@@ -14,12 +14,30 @@ const alertsPath = path.join(process.cwd(), "src", "data", "alerts.json");
 
 // --- Helper Functions ---
 async function readData<T>(filePath: string): Promise<T[]> {
-  const data = await fs.readFile(filePath, "utf8");
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
 }
 
 async function writeData<T>(filePath: string, data: T[]): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
+}
+
+async function saveFile(file: File, subfolder: string): Promise<string> {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', subfolder);
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uniqueFilename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const filePath = path.join(uploadDir, uniqueFilename);
+    
+    await fs.writeFile(filePath, fileBuffer);
+
+    return `/uploads/${subfolder}/${uniqueFilename}`;
 }
 
 // --- Contact Form Action ---
@@ -67,47 +85,80 @@ export async function logout() {
 
 // --- Admin CRUD Actions ---
 
-// Schema for Route validation
-const routeSchema = z.object({
+const routeFormSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(3, "El nombre es requerido."),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
-  imagenHorarioUrl: z.string().min(1, "La URL de la imagen es requerida."),
   activo: z.coerce.boolean(),
+  imagenHorario: z.instanceof(File).optional(),
+  imagenTarjeta: z.instanceof(File).optional(),
 });
+
 
 export async function saveRoute(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
-  const validation = routeSchema.safeParse(rawData);
+  
+  // Zod can't parse files from FormData directly, so we handle them separately.
+  const fileValidation = {
+      imagenHorario: rawData.imagenHorario instanceof File ? rawData.imagenHorario : undefined,
+      imagenTarjeta: rawData.imagenTarjeta instanceof File ? rawData.imagenTarjeta : undefined,
+  }
+  
+  const validation = routeFormSchema.safeParse({ ...rawData, ...fileValidation });
 
   if (!validation.success) {
+    console.error(validation.error.flatten().fieldErrors);
     return { success: false, error: validation.error.flatten().fieldErrors };
   }
 
-  const routes = await readData<Route>(routesPath);
-  const data = validation.data;
-  const newRoute = {
-    ...data,
-    lastUpdated: new Date().toISOString(),
-  };
-
-  if (data.id) { // Update
-    const index = routes.findIndex(r => r.id === data.id);
-    if (index !== -1) {
-      routes[index] = { ...routes[index], ...newRoute };
+  try {
+    const routes = await readData<Route>(routesPath);
+    const data = validation.data;
+    
+    let existingRoute: Route | undefined;
+    if (data.id) {
+        existingRoute = routes.find(r => r.id === data.id);
     }
-  } else { // Create
-    routes.push({
-      ...newRoute,
-      id: newRoute.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-    });
-  }
 
-  await writeData(routesPath, routes);
-  revalidatePath("/");
-  revalidatePath("/admin/dashboard");
-  return { success: true };
+    let imagenHorarioUrl = existingRoute?.imagenHorarioUrl;
+    if (data.imagenHorario) {
+        imagenHorarioUrl = await saveFile(data.imagenHorario, 'schedules');
+    }
+
+    let imagenTarjetaUrl = existingRoute?.imagenTarjetaUrl;
+    if (data.imagenTarjeta) {
+        imagenTarjetaUrl = await saveFile(data.imagenTarjeta, 'cards');
+    }
+
+    const routeData: Omit<Route, 'id'> = {
+        nombre: data.nombre,
+        duracionMin: data.duracionMin,
+        tarifaCRC: data.tarifaCRC,
+        activo: data.activo,
+        imagenHorarioUrl: imagenHorarioUrl || existingRoute?.imagenHorarioUrl || '',
+        imagenTarjetaUrl: imagenTarjetaUrl || existingRoute?.imagenTarjetaUrl || '',
+        lastUpdated: new Date().toISOString(),
+    };
+
+    if (data.id && existingRoute) { // Update
+        const index = routes.findIndex(r => r.id === data.id);
+        routes[index] = { ...existingRoute, ...routeData };
+    } else { // Create
+        routes.push({
+            ...routeData,
+            id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+        });
+    }
+
+    await writeData(routesPath, routes);
+    revalidatePath("/");
+    revalidatePath("/admin/dashboard");
+    return { success: true };
+  } catch (error) {
+      console.error("Error saving route:", error);
+      return { success: false, error: "No se pudo procesar la solicitud." };
+  }
 }
 
 export async function deleteRoute(id: string) {
@@ -158,7 +209,8 @@ export async function saveAlert(formData: FormData) {
   }
 
   await writeData(alertsPath, alerts);
-  revalidatePath("/");
+revalidatePath("/");
+  revalidatePath("/alertas");
   revalidatePath("/admin/dashboard");
   return { success: true };
 }
@@ -169,6 +221,7 @@ export async function deleteAlert(id: string) {
     alerts = alerts.filter(a => a.id !== id);
     await writeData(alertsPath, alerts);
     revalidatePath("/");
+    revalidatePath("/alertas");
     revalidatePath("/admin/dashboard");
     return { success: true };
 }

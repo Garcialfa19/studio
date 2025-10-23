@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -8,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
 import type { Route } from "@/lib/definitions";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Separator } from "../ui/separator";
 
 type RoutesSectionProps = {
@@ -29,19 +27,6 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
       (route) => route.activo && route.nombre.toLowerCase().includes('sarchí')
     );
   }, [initialRoutes]);
-  
-  const scheduleImages = PlaceHolderImages.filter(img => img.id.startsWith('schedule-'));
-  const routeImage = PlaceHolderImages.find(img => img.id === 'route-card-image');
-
-
-  const getImageUrl = (route: Route) => {
-    const foundImage = PlaceHolderImages.find(img => img.id === route.imagenHorarioUrl);
-    if (foundImage) {
-      return foundImage.imageUrl;
-    }
-    // Fallback to a generic placeholder if not found
-    return scheduleImages[0]?.imageUrl || "https://picsum.photos/seed/default/800/1200";
-  }
 
   const RouteGrid = ({ routes }: { routes: Route[] }) => {
     if (routes.length === 0) {
@@ -65,17 +50,14 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
               role="button"
               aria-label={`Ver horario de ${route.nombre}`}
             >
-              {routeImage && (
-                 <div className="relative aspect-[16/10] w-full p-6">
-                    <Image
-                      src={routeImage.imageUrl}
-                      alt={`Autobús de la ruta ${route.nombre}`}
-                      fill
-                      className="object-cover rounded-md"
-                      data-ai-hint={routeImage.imageHint}
-                    />
-                 </div>
-              )}
+              <div className="relative aspect-[16/10] w-full p-4">
+                <Image
+                    src={route.imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C"}
+                    alt={`Autobús de la ruta ${route.nombre}`}
+                    fill
+                    className="object-cover rounded-md"
+                />
+              </div>
               <CardContent className="p-4 pt-0 flex flex-col flex-grow">
                 <h3 className="font-headline text-2xl font-bold">{route.nombre}</h3>
                 <p className="text-muted-foreground mb-3">Por Churuca</p>
@@ -116,7 +98,7 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
         route={selectedRoute}
         isOpen={!!selectedRoute}
         onOpenChange={(open) => !open && setSelectedRoute(null)}
-        imageUrl={selectedRoute ? getImageUrl(selectedRoute) : ''}
+        imageUrl={selectedRoute?.imagenHorarioUrl || ''}
       />
     </Section>
   );
