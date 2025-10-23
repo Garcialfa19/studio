@@ -70,7 +70,7 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
               aria-label={`Ver horario de ${route.nombre}`}
             >
               {routeImage && (
-                 <div className="relative aspect-[16/10] w-full p-4">
+                 <div className="relative aspect-[16/10] w-full p-6">
                     <Image
                       src={routeImage.imageUrl}
                       alt={`Autobús de la ruta ${route.nombre}`}
