@@ -4,7 +4,6 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Bus, Clock } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
@@ -17,16 +16,13 @@ type RoutesSectionProps = {
 };
 
 export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
 
   const filteredRoutes = useMemo(() => {
     return initialRoutes.filter(
-      (route) =>
-        route.activo &&
-        route.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      (route) => route.activo
     );
-  }, [initialRoutes, searchTerm]);
+  }, [initialRoutes]);
   
   const scheduleImages = PlaceHolderImages.filter(img => img.id.startsWith('schedule-'));
   const routeImage = PlaceHolderImages.find(img => img.id === 'route-card-image');
@@ -44,19 +40,8 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
   return (
     <Section id="rutas" className="bg-card">
       <SectionHeader
-        title="Nuestras Rutas"
-        description="Encuentra la información de horarios, tarifas y duración de todas nuestras rutas disponibles."
+        title="Grecia"
       />
-
-      <div className="mb-8 max-w-md mx-auto">
-        <Input
-          type="text"
-          placeholder="Buscar ruta por nombre (ej. 'Grecia', 'Sarchí')"
-          className="w-full text-center"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
 
       {filteredRoutes.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -114,3 +99,4 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
     </Section>
   );
 }
+
