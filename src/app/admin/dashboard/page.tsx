@@ -1,5 +1,5 @@
 import AdminDashboard from "@/components/admin/AdminDashboard";
-import { getRoutes, getAlerts } from "@/lib/data-service";
+import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service";
 import { logout } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -9,6 +9,7 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const routes = await getRoutes();
   const alerts = await getAlerts();
+  const drivers = await getDrivers();
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
           </div>
       </header>
       <main className="p-4 sm:px-6 sm:py-0">
-        <AdminDashboard initialRoutes={routes} initialAlerts={alerts} />
+        <AdminDashboard initialRoutes={routes} initialAlerts={alerts} initialDrivers={drivers} />
       </main>
     </div>
   );

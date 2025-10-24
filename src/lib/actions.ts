@@ -6,11 +6,12 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { Route, Alert } from "./definitions";
+import type { Route, Alert, Driver } from "./definitions";
 
 // --- Data Paths ---
 const routesPath = path.join(process.cwd(), "src", "data", "routes.json");
 const alertsPath = path.join(process.cwd(), "src", "data", "alerts.json");
+const driversPath = path.join(process.cwd(), "src", "data", "drivers.json");
 
 // --- Helper Functions ---
 async function readData<T>(filePath: string): Promise<T[]> {
@@ -212,6 +213,72 @@ export async function deleteAlert(id: string) {
     await writeData(alertsPath, alerts);
     revalidatePath("/");
     revalidatePath("/alertas");
+    revalidatePath("/admin/dashboard");
+    return { success: true };
+}
+
+
+const driverSchema = z.object({
+    id: z.string().optional(),
+    nombre: z.string().min(1, "El nombre es requerido."),
+    routeId: z.string().nullable(),
+    status: z.string().optional(),
+    comment: z.string().optional(),
+});
+  
+
+export async function saveDriver(formData: FormData) {
+    const rawData = Object.fromEntries(formData.entries());
+
+    // Handle nullable routeId
+    if (rawData.routeId === 'null' || rawData.routeId === '') {
+        rawData.routeId = null;
+    }
+
+    const validation = driverSchema.safeParse(rawData);
+  
+    if (!validation.success) {
+      console.error("Driver validation error:", validation.error.flatten().fieldErrors);
+      return { success: false, error: validation.error.flatten().fieldErrors };
+    }
+  
+    try {
+      const drivers = await readData<Driver>(driversPath);
+      const data = validation.data;
+  
+      const driverData: Omit<Driver, 'id' | 'lastUpdated'> & { lastUpdated: string } = {
+          nombre: data.nombre,
+          routeId: data.routeId,
+          status: data.status || '',
+          comment: data.comment || '',
+          lastUpdated: new Date().toISOString(),
+      };
+  
+      if (data.id) { // Update
+          const index = drivers.findIndex(d => d.id === data.id);
+          if (index > -1) {
+              drivers[index] = { ...drivers[index], ...driverData };
+          }
+      } else { // Create
+          drivers.push({
+              ...driverData,
+              id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+          });
+      }
+  
+      await writeData(driversPath, drivers);
+      revalidatePath("/admin/dashboard");
+      return { success: true };
+    } catch (error) {
+        console.error("Error saving driver:", error);
+        return { success: false, error: "No se pudo procesar la solicitud." };
+    }
+}
+  
+export async function deleteDriver(id: string) {
+    let drivers = await readData<Driver>(driversPath);
+    drivers = drivers.filter(d => d.id !== id);
+    await writeData(driversPath, drivers);
     revalidatePath("/admin/dashboard");
     return { success: true };
 }

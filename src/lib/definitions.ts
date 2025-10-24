@@ -15,3 +15,12 @@ export type Alert = {
   titulo: string;
   lastUpdated: string;
 };
+
+export type Driver = {
+  id: string;
+  nombre: string;
+  routeId: string | null;
+  status: string;
+  comment: string;
+  lastUpdated: string;
+};
