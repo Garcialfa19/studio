@@ -5,10 +5,10 @@
     "category": "grecia",
     "duracionMin": 60,
     "tarifaCRC": 650,
-    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
-    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "imagenHorarioUrl": "/uploads/schedules/1761341417464-Unknown.jpeg",
+    "imagenTarjetaUrl": "/uploads/cards/1761341417468-Unknown.jpeg",
     "activo": true,
-    "lastUpdated": "2024-07-28T10:00:00Z"
+    "lastUpdated": "2025-10-24T21:30:17.468Z"
   },
   {
     "id": "sarchi-poas",
@@ -16,10 +16,10 @@
     "category": "sarchi",
     "duracionMin": 60,
     "tarifaCRC": 650,
-    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
-    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "imagenHorarioUrl": "/uploads/schedules/1761341440154-Unknown.jpeg",
+    "imagenTarjetaUrl": "/uploads/cards/1761341440156-Unknown.jpeg",
     "activo": true,
-    "lastUpdated": "2024-07-28T10:05:00Z"
+    "lastUpdated": "2025-10-24T21:30:40.157Z"
   },
   {
     "id": "grecia-sarchi",
@@ -27,10 +27,10 @@
     "category": "grecia",
     "duracionMin": 30,
     "tarifaCRC": 450,
-    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
-    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "imagenHorarioUrl": "/uploads/schedules/1761341451130-Unknown.jpeg",
+    "imagenTarjetaUrl": "/uploads/cards/1761341451134-Unknown.jpeg",
     "activo": true,
-    "lastUpdated": "2024-07-28T10:10:00Z"
+    "lastUpdated": "2025-10-24T21:30:51.134Z"
   },
   {
     "id": "naranjo-grecia",
@@ -49,9 +49,9 @@
     "category": "grecia",
     "duracionMin": 130,
     "tarifaCRC": 1500,
-    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
-    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "imagenHorarioUrl": "/uploads/schedules/1761341463972-Unknown.jpeg",
+    "imagenTarjetaUrl": "/uploads/cards/1761341463974-Unknown.jpeg",
     "activo": true,
-    "lastUpdated": "2025-10-23T22:25:05.983Z"
+    "lastUpdated": "2025-10-24T21:31:03.974Z"
   }
 ]
