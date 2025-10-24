@@ -68,7 +68,7 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
                     <span>{route.duracionMin} Min</span>
                   </div>
                   <span className="text-lg font-bold text-foreground">
-                    ₡{route.tarifaCRC.toLocaleString('es-CR')}
+                    ₡{route.tarifaCRC}
                   </span>
                 </div>
               </CardContent>
