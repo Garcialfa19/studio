@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: asg-website-ingress
+  annotations:
+    # Use nginx-ingress-controller
+    kubernetes.io/ingress.class: "nginx"
+    # Optional: If using cert-manager for automatic SSL
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod" 
+spec:
+  rules:
+  - host: "asg-digital.yourdomain.com" # IMPORTANT: Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: asg-website-service
+            port:
+              number: 80
+  # Optional: For TLS/SSL
+  # tls:
+  # - hosts:
+  #   - "asg-digital.yourdomain.com"
+  #   secretName: asg-tls-secret # Secret containing your TLS certificate

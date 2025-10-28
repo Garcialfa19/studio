@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asg-website-deployment
+spec:
+  replicas: 2 # Start with 2 instances of your app for high availability
+  selector:
+    matchLabels:
+      app: asg-website
+  template:
+    metadata:
+      labels:
+        app: asg-website
+    spec:
+      containers:
+      - name: asg-website
+        image: your-docker-registry/asg-website:latest # IMPORTANT: Replace with your image path
+        ports:
+        - containerPort: 3000
+        env:
+          - name: ADMIN_USER
+            value: "admin" # For production, use Secrets for sensitive data
+          - name: ADMIN_PASS
+            value: "your-secure-password" # IMPORTANT: Replace and use Secrets
