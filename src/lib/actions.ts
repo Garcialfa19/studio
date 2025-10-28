@@ -221,6 +221,7 @@ export async function deleteAlert(id: string) {
 const driverSchema = z.object({
     id: z.string().optional(),
     nombre: z.string().min(1, "El nombre es requerido."),
+    busPlate: z.string().optional(),
     routeId: z.string().nullable(),
     status: z.string().optional(),
     comment: z.string().optional(),
@@ -248,6 +249,7 @@ export async function saveDriver(formData: FormData) {
   
       const driverData: Omit<Driver, 'id' | 'lastUpdated'> & { lastUpdated: string } = {
           nombre: data.nombre,
+          busPlate: data.busPlate || '',
           routeId: data.routeId,
           status: data.status || '',
           comment: data.comment || '',

@@ -19,6 +19,7 @@ export type Alert = {
 export type Driver = {
   id: string;
   nombre: string;
+  busPlate: string;
   routeId: string | null;
   status: string;
   comment: string;

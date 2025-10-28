@@ -52,6 +52,7 @@ import {
 const driverSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
+  busPlate: z.string().optional(),
   routeId: z.string().nullable(),
   status: z.string().optional(),
   comment: z.string().optional(),
@@ -66,6 +67,7 @@ const DriverForm = ({ driver, routes, onOpenChange }: { driver: Partial<Driver> 
     defaultValues: {
       id: driver?.id || "",
       nombre: driver?.nombre || "",
+      busPlate: driver?.busPlate || "",
       routeId: driver?.routeId || null,
       status: driver?.status || "",
       comment: driver?.comment || "",
@@ -102,6 +104,14 @@ const DriverForm = ({ driver, routes, onOpenChange }: { driver: Partial<Driver> 
           </FormItem>
         )} />
         
+        <FormField control={form.control} name="busPlate" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Placa del Bus</FormLabel>
+            <FormControl><Input {...field} placeholder="Ej: AB 1234" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
         <FormField control={form.control} name="routeId" render={({ field }) => (
           <FormItem>
             <FormLabel>Ruta Asignada</FormLabel>
@@ -188,6 +198,7 @@ export default function DriversManager({ drivers, routes }: { drivers: Driver[],
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead>Placa del Bus</TableHead>
               <TableHead>Ruta Asignada</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Comentario</TableHead>
@@ -198,6 +209,7 @@ export default function DriversManager({ drivers, routes }: { drivers: Driver[],
             {drivers.map((driver) => (
               <TableRow key={driver.id}>
                 <TableCell className="font-medium">{driver.nombre}</TableCell>
+                <TableCell>{driver.busPlate}</TableCell>
                 <TableCell>{getRouteName(driver.routeId)}</TableCell>
                 <TableCell>{driver.status}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{driver.comment}</TableCell>

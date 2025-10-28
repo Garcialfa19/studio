@@ -1,10 +1,5 @@
 [
   {
-    "id": "retraso-mantenimiento-202407",
-    "titulo": "La ruta Grecia - Poás podría experimentar retrasos de hasta 20 minutos debido a mantenimiento en la vía.",
-    "lastUpdated": "2025-10-23T22:48:31.247Z"
-  },
-  {
     "id": "servicio-reducido-domingo-202408",
     "titulo": "El próximo domingo el servicio de todas las rutas operará con horario reducido de 8:00 a.m. a 5:00 p.m.",
     "lastUpdated": "2024-07-28T09:05:00Z"
@@ -18,5 +13,10 @@
     "titulo": "test",
     "id": "test-1761260368676",
     "lastUpdated": "2025-10-23T22:59:28.676Z"
+  },
+  {
+    "titulo": "tets aryo",
+    "id": "tets-aryo-1761521212548",
+    "lastUpdated": "2025-10-26T23:26:52.548Z"
   }
 ]
