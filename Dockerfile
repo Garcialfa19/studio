@@ -1,35 +1,40 @@
-# 1. Base Image: Use the official Node.js image
-FROM node:20-alpine AS base
-
-# 2. Set up the working directory
+# Stage 1: Install dependencies
+# We create a separate 'dependencies' stage to leverage Docker's layer caching.
+# This layer only gets rebuilt if your package.json or package-lock.json changes.
+FROM node:20-slim AS dependencies
 WORKDIR /app
-
-# 3. Install dependencies
-COPY package.json ./
-COPY package-lock.json ./
+COPY package.json package-lock.json* ./
 RUN npm install
 
-# 4. Copy the rest of the application code
+# Stage 2: Build the application
+# This stage takes the installed dependencies and builds your Next.js app.
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-
-# 5. Build the Next.js application
+# Set environment variables for the build
+ENV ADMIN_USER=admin
+ENV ADMIN_PASS=changeme
+# Run the production build
 RUN npm run build
 
-# 6. Production Image: Use a smaller, more secure image for the final stage
-FROM node:20-alpine AS runner
+# Stage 3: Production image
+# This is the final, lean image that will run your application.
+FROM node:20-slim AS runner
 WORKDIR /app
 
-# Set environment variables for production
 ENV NODE_ENV=production
+# You can set default credentials here, but it's better to override them at runtime.
+ENV ADMIN_USER=admin
+ENV ADMIN_PASS=changeme
 
-# Copy the built application from the 'base' stage
-COPY --from=base /app/public ./public
-COPY --from=base /app/.next ./.next
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/package.json ./package.json
+# Copy the built app from the 'builder' stage
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-# Expose the port Next.js runs on (default is 3000)
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Command to start the application
-CMD ["npm", "start"]
+# The command to start the app
+CMD ["node", "server.js"]
