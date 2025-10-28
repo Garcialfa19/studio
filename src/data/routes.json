@@ -1,3 +1,4 @@
+
 [
   {
     "id": "grecia-poas",
@@ -53,5 +54,27 @@
     "imagenTarjetaUrl": "/uploads/cards/1761341463974-Unknown.jpeg",
     "activo": true,
     "lastUpdated": "2025-10-24T21:31:03.974Z"
+  },
+  {
+    "id": "sarchi-naranjo-1761521212550",
+    "nombre": "Sarchí – Naranjo",
+    "category": "sarchi",
+    "duracionMin": 25,
+    "tarifaCRC": 400,
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "activo": true,
+    "lastUpdated": "2025-10-28T10:15:00Z"
+  },
+  {
+    "id": "sarchi-san-pedro-1761521212551",
+    "nombre": "Sarchí – San Pedro",
+    "category": "sarchi",
+    "duracionMin": 40,
+    "tarifaCRC": 550,
+    "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
+    "imagenTarjetaUrl": "/uploads/cards/placeholder.png",
+    "activo": true,
+    "lastUpdated": "2025-10-28T10:16:00Z"
   }
 ]
