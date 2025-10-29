@@ -4,8 +4,6 @@ import { promises as fs } from "fs";
 import path from "path";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import type { Route, Alert, Driver } from "./definitions";
 
 // --- Data Paths ---
@@ -19,7 +17,7 @@ async function readData<T>(filePath: string): Promise<T[]> {
     const data = await fs.readFile(filePath, "utf8");
     return JSON.parse(data);
   } catch (error) {
-    if (error.code === 'ENOENT') return [];
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw error;
   }
 }
@@ -57,31 +55,6 @@ export async function submitContactForm(data: z.infer<typeof contactSchema>) {
   } catch (error) {
     return { success: false, message: "Validation failed." };
   }
-}
-
-// --- Auth Actions ---
-const AUTH_COOKIE_NAME = "asg-auth";
-
-export async function authenticate(prevState: { error: string } | undefined, formData: FormData) {
-    const username = formData.get("username");
-    const password = formData.get("password");
-
-    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-        cookies().set(AUTH_COOKIE_NAME, "true", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24, // 1 day
-            path: '/',
-        });
-        redirect('/admin/dashboard');
-    } else {
-        return { error: 'Credenciales inválidas.' };
-    }
-}
-
-export async function logout() {
-    cookies().delete(AUTH_COOKIE_NAME);
-    redirect('/admin');
 }
 
 // --- Admin CRUD Actions ---

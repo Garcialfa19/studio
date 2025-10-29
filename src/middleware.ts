@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const authCookie = request.cookies.get('asg-auth');
+  const authCookie = request.cookies.get('firebase-auth');
 
   if (request.nextUrl.pathname.startsWith('/admin/dashboard')) {
     if (!authCookie) {
