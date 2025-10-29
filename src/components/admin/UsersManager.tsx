@@ -179,7 +179,9 @@ export default function UsersManager() {
                     <div className="flex justify-end items-center">
                         <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="ghost" size="icon" disabled={user.email === 'admin@asg.cr'}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader><AlertDialogTitle>¿Estás seguro?</AlertDialogTitle><AlertDialogDescription>Esta acción es permanente y eliminará al usuario.</AlertDialogDescription></AlertDialogHeader>

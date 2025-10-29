@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import {
-  GoogleAuthProvider,
-  signInWithPopup,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -38,34 +36,8 @@ export function FirebaseLoginForm() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    if (!auth) return;
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      router.push('/admin/dashboard');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error con Google',
-        description: error.message,
-      });
-    }
-  };
-
   return (
     <div className="flex flex-col gap-4">
-       <Button variant="outline" onClick={handleGoogleSignIn}>
-        Continuar con Google
-      </Button>
-
-      <div className="relative">
-        <Separator />
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center bg-muted px-2">
-            <span className="text-xs uppercase text-muted-foreground">O</span>
-        </div>
-      </div>
-
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
         <Input
