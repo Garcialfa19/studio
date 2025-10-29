@@ -4,9 +4,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import type { Route, Alert, Driver, User } from "./definitions";
-import { getAdminApp } from "@/firebase/admin";
-import { Auth, getAuth } from "firebase-admin/auth";
+import type { Route, Alert, Driver } from "./definitions";
 
 // --- Data Paths ---
 const routesPath = path.join(process.cwd(), "src", "data", "routes.json");
@@ -240,70 +238,4 @@ export async function deleteDriver(id: string) {
     await writeData(driversPath, drivers);
     revalidatePath("/admin/dashboard");
     return { success: true };
-}
-
-// --- User Management Actions ---
-
-export async function getUsers(): Promise<{ users?: User[]; error?: string }> {
-  try {
-    const adminApp = await getAdminApp();
-    const auth = getAuth(adminApp);
-    const userRecords = await auth.listUsers();
-    const users = userRecords.users.map((user) => ({
-      uid: user.uid,
-      email: user.email || 'No email',
-      displayName: user.displayName || 'No name',
-      disabled: user.disabled,
-    }));
-    return { users };
-  } catch (error: any) {
-    console.error('Error listing users:', error);
-    return { error: error.message || 'Failed to fetch users.' };
-  }
-}
-
-const newUserSchema = z.object({
-  email: z.string().email({ message: 'Por favor ingrese un email válido.' }),
-  password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
-});
-
-export async function createUser(formData: FormData) {
-  const rawData = Object.fromEntries(formData.entries());
-  const validation = newUserSchema.safeParse(rawData);
-
-  if (!validation.success) {
-    return { success: false, error: validation.error.flatten().fieldErrors };
-  }
-
-  const { email, password } = validation.data;
-
-  try {
-    const adminApp = await getAdminApp();
-    const auth = getAuth(adminApp);
-    await auth.createUser({ email, password });
-    revalidatePath('/admin/dashboard');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error creating user:', error);
-    let errorMessage = `No se pudo crear el usuario. (${error.code || 'UNKNOWN_ERROR'})`;
-    if (error.code === 'auth/email-already-exists') {
-      errorMessage = 'El correo electrónico ya está en uso por otro usuario.';
-    } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'El formato del correo electrónico no es válido.';
-    }
-    return { success: false, error: { _errors: [errorMessage] }};
-  }
-}
-
-export async function deleteUser(uid: string) {
-  try {
-    const adminApp = await getAdminApp();
-    const auth = getAuth(adminApp);
-    await auth.deleteUser(uid);
-    revalidatePath('/admin/dashboard');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error deleting user:', error);
-    return { success: false, error: error.message || 'Failed to delete user.' };
-  }
 }
