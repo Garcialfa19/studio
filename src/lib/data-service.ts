@@ -1,3 +1,5 @@
+'use server';
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
@@ -11,7 +13,7 @@ async function readData<T>(filePath: string): Promise<T[]> {
   try {
     const fileContent = await fs.readFile(filePath, 'utf8');
     return JSON.parse(fileContent) as T[];
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'ENOENT') {
         // If the file doesn't exist, create it with an empty array.
         await fs.writeFile(filePath, '[]', 'utf8');
