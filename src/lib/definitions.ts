@@ -25,3 +25,10 @@ export type Driver = {
   comment: string;
   lastUpdated: string;
 };
+
+export type User = {
+  uid: string;
+  email: string;
+  displayName: string;
+  disabled: boolean;
+};

@@ -6,7 +6,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,21 +21,17 @@ export function FirebaseLoginForm() {
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const handleAuthAction = async (action: 'signIn' | 'signUp') => {
+  const handleSignIn = async () => {
     if (!auth) return;
     setIsSigningIn(true);
     try {
-      if (action === 'signIn') {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-      }
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/admin/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error de autenticación',
-        description: error.message,
+        description: 'Usuario o contraseña incorrectos.',
       });
     } finally {
       setIsSigningIn(false);
@@ -71,7 +66,6 @@ export function FirebaseLoginForm() {
         </div>
       </div>
 
-
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -94,11 +88,8 @@ export function FirebaseLoginForm() {
         />
       </div>
       <div className="flex gap-2">
-        <Button onClick={() => handleAuthAction('signIn')} disabled={isSigningIn} className="flex-1">
+        <Button onClick={handleSignIn} disabled={isSigningIn} className="w-full">
           {isSigningIn ? 'Iniciando...' : 'Iniciar Sesión'}
-        </Button>
-        <Button onClick={() => handleAuthAction('signUp')} variant="secondary" disabled={isSigningIn} className="flex-1">
-          Registrarse
         </Button>
       </div>
     </div>

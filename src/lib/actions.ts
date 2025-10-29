@@ -4,7 +4,9 @@ import { promises as fs } from "fs";
 import path from "path";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import type { Route, Alert, Driver } from "./definitions";
+import type { Route, Alert, Driver, User } from "./definitions";
+import { getAdminApp } from "@/firebase/admin";
+import { Auth, getAuth } from "firebase-admin/auth";
 
 // --- Data Paths ---
 const routesPath = path.join(process.cwd(), "src", "data", "routes.json");
@@ -37,24 +39,6 @@ async function saveFile(file: File, subfolder: string): Promise<string> {
     await fs.writeFile(filePath, fileBuffer);
 
     return `/uploads/${subfolder}/${uniqueFilename}`;
-}
-
-// --- Contact Form Action ---
-const contactSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-  message: z.string(),
-});
-
-export async function submitContactForm(data: z.infer<typeof contactSchema>) {
-  try {
-    const validatedData = contactSchema.parse(data);
-    console.log("New contact form submission:", validatedData);
-    // In a real app, you would send an email or save to a database here.
-    return { success: true, message: "Form submitted successfully." };
-  } catch (error) {
-    return { success: false, message: "Validation failed." };
-  }
 }
 
 // --- Admin CRUD Actions ---
@@ -256,4 +240,64 @@ export async function deleteDriver(id: string) {
     await writeData(driversPath, drivers);
     revalidatePath("/admin/dashboard");
     return { success: true };
+}
+
+// --- User Management Actions ---
+
+export async function getUsers(): Promise<{ users?: User[]; error?: string }> {
+  try {
+    const adminApp = getAdminApp();
+    const auth = getAuth(adminApp);
+    const userRecords = await auth.listUsers();
+    const users = userRecords.users.map((user) => ({
+      uid: user.uid,
+      email: user.email || 'No email',
+      displayName: user.displayName || 'No name',
+      disabled: user.disabled,
+    }));
+    return { users };
+  } catch (error: any) {
+    console.error('Error listing users:', error);
+    return { error: error.message || 'Failed to fetch users.' };
+  }
+}
+
+const newUserSchema = z.object({
+  email: z.string().email({ message: 'Por favor ingrese un email válido.' }),
+  password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
+});
+
+export async function createUser(formData: FormData) {
+  const rawData = Object.fromEntries(formData.entries());
+  const validation = newUserSchema.safeParse(rawData);
+
+  if (!validation.success) {
+    return { success: false, error: validation.error.flatten().fieldErrors };
+  }
+
+  const { email, password } = validation.data;
+
+  try {
+    const adminApp = getAdminApp();
+    const auth = getAuth(adminApp);
+    await auth.createUser({ email, password });
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error creating user:', error);
+    return { success: false, error: { _errors: [error.message || 'Failed to create user.'] }};
+  }
+}
+
+export async function deleteUser(uid: string) {
+  try {
+    const adminApp = getAdminApp();
+    const auth = getAuth(adminApp);
+    await auth.deleteUser(uid);
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    return { success: false, error: error.message || 'Failed to delete user.' };
+  }
 }

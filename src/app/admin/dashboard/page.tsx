@@ -9,6 +9,7 @@ import { useAuth } from "@/firebase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type Route, type Alert, type Driver } from "@/lib/definitions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function DashboardPage() {
@@ -30,6 +31,7 @@ export default function DashboardPage() {
     async function loadData() {
       if(user) {
         try {
+          setDataLoading(true);
           const [routesData, alertsData, driversData] = await Promise.all([
             getRoutes(),
             getAlerts(),
@@ -53,10 +55,14 @@ export default function DashboardPage() {
     router.push('/admin');
   };
 
-  if (loading || dataLoading || !user) {
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p>Cargando...</p>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
       </div>
     );
   }
@@ -76,7 +82,14 @@ export default function DashboardPage() {
           </div>
       </header>
       <main className="p-4 sm:px-6 sm:py-0">
-        <AdminDashboard initialRoutes={routes} initialAlerts={alerts} initialDrivers={drivers} />
+        {dataLoading ? (
+           <div className="space-y-4">
+              <Skeleton className="h-10 w-96" />
+              <Skeleton className="h-96 w-full" />
+            </div>
+        ) : (
+          <AdminDashboard initialRoutes={routes} initialAlerts={alerts} initialDrivers={drivers} />
+        )}
       </main>
     </div>
   );
