@@ -15,7 +15,7 @@ type AdminDashboardProps = {
 export default function AdminDashboard({ initialRoutes, initialAlerts, initialDrivers }: AdminDashboardProps) {
   return (
     <Tabs defaultValue="routes">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList>
         <TabsTrigger value="routes">Gestionar Rutas</TabsTrigger>
         <TabsTrigger value="alerts">Gestionar Alertas</TabsTrigger>
         <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
