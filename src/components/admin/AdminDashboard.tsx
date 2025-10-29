@@ -15,11 +15,13 @@ type AdminDashboardProps = {
 export default function AdminDashboard({ initialRoutes, initialAlerts, initialDrivers }: AdminDashboardProps) {
   return (
     <Tabs defaultValue="routes">
-      <TabsList>
-        <TabsTrigger value="routes">Gestionar Rutas</TabsTrigger>
-        <TabsTrigger value="alerts">Gestionar Alertas</TabsTrigger>
-        <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
-      </TabsList>
+      <div className="flex justify-center">
+        <TabsList>
+          <TabsTrigger value="routes">Gestionar Rutas</TabsTrigger>
+          <TabsTrigger value="alerts">Gestionar Alertas</TabsTrigger>
+          <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
+        </TabsList>
+      </div>
       <TabsContent value="routes">
         <RoutesManager routes={initialRoutes} />
       </TabsContent>
