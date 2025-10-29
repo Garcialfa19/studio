@@ -72,7 +72,7 @@ const UserForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) =
     const result = await createUser(formData);
     if (result.success) {
       toast({ title: "Usuario creado", description: "El nuevo usuario ha sido creado." });
-      onOpenChange(false);
+      onOpenChange(false); // This will also trigger a refresh in the parent
       form.reset();
     } else {
         const errorMessage = result.error?._errors?.[0] || "No se pudo crear el usuario.";
@@ -117,10 +117,6 @@ export default function UsersManager() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     setLoading(true);
     const { users, error } = await getUsers();
@@ -132,6 +128,10 @@ export default function UsersManager() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleDelete = async (uid: string) => {
     const result = await deleteUser(uid);
@@ -179,6 +179,7 @@ export default function UsersManager() {
                     <div className="flex justify-end items-center">
                         <AlertDialog>
                         <AlertDialogTrigger asChild>
+                            {/* Prevent deleting the main admin user as a safeguard */}
                             <Button variant="ghost" size="icon" disabled={user.email === 'admin@asg.cr'}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -206,7 +207,9 @@ export default function UsersManager() {
       </CardContent>
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
           setIsDialogOpen(isOpen);
-          if (!isOpen) fetchUsers(); // Refresh on close
+          if (!isOpen) {
+            fetchUsers(); // Refresh on close
+          }
       }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Nuevo Usuario</DialogTitle></DialogHeader>

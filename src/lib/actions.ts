@@ -285,7 +285,13 @@ export async function createUser(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     console.error('Error creating user:', error);
-    return { success: false, error: { _errors: [error.message || 'Failed to create user.'] }};
+    let errorMessage = 'No se pudo crear el usuario.';
+    if (error.code === 'auth/email-already-exists') {
+      errorMessage = 'El correo electrónico ya está en uso por otro usuario.';
+    } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'El formato del correo electrónico no es válido.';
+    }
+    return { success: false, error: { _errors: [errorMessage] }};
   }
 }
 
