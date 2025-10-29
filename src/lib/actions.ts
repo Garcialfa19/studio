@@ -246,7 +246,7 @@ export async function deleteDriver(id: string) {
 
 export async function getUsers(): Promise<{ users?: User[]; error?: string }> {
   try {
-    const adminApp = getAdminApp();
+    const adminApp = await getAdminApp();
     const auth = getAuth(adminApp);
     const userRecords = await auth.listUsers();
     const users = userRecords.users.map((user) => ({
@@ -278,14 +278,14 @@ export async function createUser(formData: FormData) {
   const { email, password } = validation.data;
 
   try {
-    const adminApp = getAdminApp();
+    const adminApp = await getAdminApp();
     const auth = getAuth(adminApp);
     await auth.createUser({ email, password });
     revalidatePath('/admin/dashboard');
     return { success: true };
   } catch (error: any) {
     console.error('Error creating user:', error);
-    let errorMessage = 'No se pudo crear el usuario.';
+    let errorMessage = `No se pudo crear el usuario. (${error.code || 'UNKNOWN_ERROR'})`;
     if (error.code === 'auth/email-already-exists') {
       errorMessage = 'El correo electrónico ya está en uso por otro usuario.';
     } else if (error.code === 'auth/invalid-email') {
@@ -297,7 +297,7 @@ export async function createUser(formData: FormData) {
 
 export async function deleteUser(uid: string) {
   try {
-    const adminApp = getAdminApp();
+    const adminApp = await getAdminApp();
     const auth = getAuth(adminApp);
     await auth.deleteUser(uid);
     revalidatePath('/admin/dashboard');
