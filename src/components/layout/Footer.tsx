@@ -1,10 +1,17 @@
+import { Facebook } from "lucide-react";
+
 export function Footer() {
-  const currentYear = new Date().getFullYear();
   return (
     <footer className="bg-muted py-8">
-      <div className="container text-center text-sm text-muted-foreground">
-        <p>&copy; {currentYear} Autotransportes Santa Gertrudis. Todos los derechos reservados.</p>
-        <p className="mt-2">Diseñado y desarrollado con ♥</p>
+      <div className="container text-center text-sm text-muted-foreground space-y-2">
+        <p>Copyright © 2020 Autotransportes Santa Gertrudis.</p>
+        <div className="flex justify-center items-center gap-2">
+          <span>Síguenos en:</span>
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+            <Facebook className="h-5 w-5" />
+          </a>
+        </div>
+        <p>Contacto: info@asgcr.com | Tel: +506 2494-4231</p>
       </div>
     </footer>
   );
