@@ -5,7 +5,7 @@ import * as admin from 'firebase-admin';
 // It initializes the app if it's not already initialized.
 // In a managed environment like Firebase App Hosting, the SDK
 // automatically discovers the service account credentials.
-export const getAdminApp = () => {
+export const getAdminApp = async () => {
     if (admin.apps.length > 0) {
         return admin.apps[0] as admin.app.App;
     }
