@@ -61,7 +61,7 @@ export async function saveRoute(formData: FormData) {
     
     const routesCollection = collection(firestore, 'routes');
     let routeDocRef;
-    let existingData = {};
+    let existingData: Partial<Route> = {};
 
     if (data.id) {
         routeDocRef = doc(routesCollection, data.id);
@@ -73,12 +73,12 @@ export async function saveRoute(formData: FormData) {
         routeDocRef = doc(routesCollection); // Let Firestore generate ID
     }
 
-    let imagenHorarioUrl = (existingData as Route)?.imagenHorarioUrl;
+    let imagenHorarioUrl = existingData.imagenHorarioUrl;
     if (data.imagenHorario) {
         imagenHorarioUrl = await saveFile(data.imagenHorario, 'schedules');
     }
 
-    let imagenTarjetaUrl = (existingData as Route)?.imagenTarjetaUrl;
+    let imagenTarjetaUrl = existingData.imagenTarjetaUrl;
     if (data.imagenTarjeta) {
         imagenTarjetaUrl = await saveFile(data.imagenTarjeta, 'cards');
     }
