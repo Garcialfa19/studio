@@ -1,3 +1,5 @@
+// THIS FILE IS ONLY FOR SERVER-SIDE USE
+import 'server-only';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
