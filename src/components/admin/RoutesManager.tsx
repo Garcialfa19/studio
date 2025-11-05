@@ -93,11 +93,11 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="duracionMin">Duración (min)</Label>
-            <Input id="duracionMin" name="duracionMin" type="number" defaultValue={route?.duracionMin || 0} required />
+            <Input id="duracionMin" name="duracionMin" type="number" defaultValue={route?.duracionMin ?? 0} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="tarifaCRC">Tarifa (₡)</Label>
-            <Input id="tarifaCRC" name="tarifaCRC" type="number" defaultValue={route?.tarifaCRC || 0} required />
+            <Input id="tarifaCRC" name="tarifaCRC" type="number" defaultValue={route?.tarifaCRC ?? 0} required />
           </div>
         </div>
         

@@ -67,7 +67,7 @@ export async function saveRoute(formData: FormData) {
         imagenHorarioUrl = await saveFileToFirebase(scheduleImageFile);
     }
     
-    const routeId = formData.get('id') as string | undefined;
+    const routeId = formData.get('id') as string;
 
     const routeData = {
         ...data,
@@ -78,7 +78,7 @@ export async function saveRoute(formData: FormData) {
     delete (routeData as any).id;
 
 
-    if (routeId) {
+    if (routeId && routeId.trim() !== '') {
         // Update existing route
         const routeRef = doc(firestore, 'routes', routeId);
         await updateDoc(routeRef, routeData);
