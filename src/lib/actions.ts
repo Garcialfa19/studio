@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
+import { initializeFirebase } from '@/firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
@@ -34,18 +36,18 @@ async function writeData<T>(filename: string, data: T[]): Promise<void> {
   }
 }
 
-async function saveFile(file: File, subdir: string): Promise<string> {
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', subdir);
-    await fs.mkdir(uploadsDir, { recursive: true });
+async function saveFileToFirebase(file: File): Promise<string> {
+    const { app } = initializeFirebase();
+    const storage = getStorage(app);
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    // Sanitize and create a unique filename
-    const uniqueFilename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const filePath = path.join(uploadsDir, uniqueFilename);
+    const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storageRef = ref(storage, uniqueFilename);
 
-    await fs.writeFile(filePath, fileBuffer);
-
-    return `/uploads/${subdir}/${uniqueFilename}`;
+    await uploadBytes(storageRef, fileBuffer, { contentType: file.type });
+    const downloadUrl = await getDownloadURL(storageRef);
+    
+    return downloadUrl;
 }
 
 
@@ -63,7 +65,7 @@ const routeSchema = z.object({
 
 export async function saveRoute(formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
-
+    
     const validatedFields = routeSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
@@ -80,17 +82,19 @@ export async function saveRoute(formData: FormData) {
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
-        imagenTarjetaUrl = await saveFile(cardImageFile, 'cards');
+        imagenTarjetaUrl = await saveFileToFirebase(cardImageFile);
     }
 
     const scheduleImageFile = formData.get('imagenHorarioUrl') as File | null;
     if (scheduleImageFile && scheduleImageFile.size > 0) {
-        imagenHorarioUrl = await saveFile(scheduleImageFile, 'schedules');
+        imagenHorarioUrl = await saveFileToFirebase(scheduleImageFile);
     }
+    
+    const routeId = formData.get('id') as string | undefined;
 
-    if (data.id) {
+    if (routeId) {
         // Update existing route
-        const index = routes.findIndex(r => r.id === data.id);
+        const index = routes.findIndex(r => r.id === routeId);
         if (index > -1) {
             routes[index] = { 
                 ...routes[index], 
@@ -166,7 +170,7 @@ export async function deleteAlert(id: string) {
     let alerts = await readData<Alert>('alerts.json');
     alerts = alerts.filter(a => a.id !== id);
     await writeData('alerts.json', alerts);
-    revalidatePath('/admin/dashboard');
+revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
     revalidatePath('/api/alerts');
 }

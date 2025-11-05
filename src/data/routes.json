@@ -7,8 +7,8 @@
     "tarifaCRC": 675,
     "imagenHorarioUrl": "https://picsum.photos/seed/schedule1/800/1200",
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus1/600/400",
-    "activo": true,
-    "lastUpdated": "2024-05-20T09:00:00Z"
+    "lastUpdated": "2024-05-20T09:00:00Z",
+    "especificacion": ""
   },
   {
     "id": "grecia-poas",
@@ -18,8 +18,8 @@
     "tarifaCRC": 850,
     "imagenHorarioUrl": "https://picsum.photos/seed/schedule2/800/1200",
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus2/600/400",
-    "activo": true,
-    "lastUpdated": "2024-05-18T14:00:00Z"
+    "lastUpdated": "2024-05-18T14:00:00Z",
+    "especificacion": "Por San Juan"
   },
   {
     "id": "sarchi-naranjo",
@@ -29,8 +29,8 @@
     "tarifaCRC": 500,
     "imagenHorarioUrl": "https://picsum.photos/seed/schedule3/800/1200",
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus3/600/400",
-    "activo": true,
-    "lastUpdated": "2024-05-19T11:00:00Z"
+    "lastUpdated": "2024-05-19T11:00:00Z",
+    "especificacion": ""
   },
   {
     "id": "sarchi-sanpedro",
@@ -40,7 +40,18 @@
     "tarifaCRC": 450,
     "imagenHorarioUrl": "https://picsum.photos/seed/schedule4/800/1200",
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus4/600/400",
-    "activo": true,
-    "lastUpdated": "2024-05-19T11:00:00Z"
+    "lastUpdated": "2024-05-19T11:00:00Z",
+    "especificacion": ""
+  },
+  {
+    "id": "test-test-1721245037108",
+    "nombre": "Test - test",
+    "especificacion": "imagen",
+    "category": "grecia",
+    "duracionMin": 0,
+    "tarifaCRC": 0,
+    "imagenTarjetaUrl": "https://storage.googleapis.com/stg-studio-notfound-dev.appspot.com/1721245033785_H8yqcTqT.jpeg",
+    "imagenHorarioUrl": "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
+    "lastUpdated": "2024-07-17T19:37:17.108Z"
   }
 ]
