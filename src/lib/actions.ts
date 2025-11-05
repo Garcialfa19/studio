@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
-import { getFirestore, doc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 
 // --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
@@ -28,6 +28,13 @@ async function saveFileToLocalServer(file: File): Promise<string> {
     // Return the public path to be stored in the database
     return `/uploads/${uniqueFilename}`;
 }
+
+const createSlug = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace(/[^\w-]+/g, '');
+};
 
 
 // --- Route Actions ---
@@ -55,6 +62,9 @@ export async function saveRoute(formData: FormData) {
     const { data } = validatedFields;
     const now = new Date().toISOString();
     
+    // Use the slug from the name as the ID
+    const routeId = createSlug(data.nombre);
+    
     let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
     let imagenHorarioUrl = formData.get('currentImagenHorarioUrl') as string || '';
 
@@ -68,23 +78,20 @@ export async function saveRoute(formData: FormData) {
         imagenHorarioUrl = await saveFileToLocalServer(scheduleImageFile);
     }
     
-    const routeId = formData.get('id') as string;
-
-    const routeData = {
-        ...data,
+    const routeData: Omit<Route, 'id'> = {
+        nombre: data.nombre,
+        especificacion: data.especificacion,
+        category: data.category,
+        duracionMin: data.duracionMin,
+        tarifaCRC: data.tarifaCRC,
         imagenTarjetaUrl: imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
         imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
         lastUpdated: now,
     };
+    
+    const routeRef = doc(firestore, 'routes', routeId);
+    await setDoc(routeRef, routeData);
 
-    if (routeId && routeId.trim() !== '') {
-        // Update existing route
-        const routeRef = doc(firestore, 'routes', routeId);
-        await updateDoc(routeRef, routeData);
-    } else {
-        // Create new route
-        await addDoc(collection(firestore, 'routes'), routeData);
-    }
 
     revalidatePath('/admin/dashboard');
     revalidatePath('/');
@@ -209,8 +216,9 @@ export async function migrateDataToFirestore() {
     const batch = writeBatch(firestore);
 
     routes.forEach((item: Route) => {
+      const docId = createSlug(item.nombre);
       const { id, ...data } = item;
-      const docRef = doc(firestore, 'routes', id);
+      const docRef = doc(firestore, 'routes', docId);
       batch.set(docRef, data);
     });
 

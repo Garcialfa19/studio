@@ -64,15 +64,19 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
     }
   }
 
+  // A new route will have an empty object, an existing one will have an ID.
+  const isEditing = !!route?.id;
+
   return (
       <form onSubmit={handleSubmit} className="space-y-4">
-        {route?.id && <input type="hidden" name="id" value={route.id} />}
+        {isEditing && <input type="hidden" name="id" value={route.id} />}
         <input type="hidden" name="currentImagenTarjetaUrl" value={route?.imagenTarjetaUrl || ''} />
         <input type="hidden" name="currentImagenHorarioUrl" value={route?.imagenHorarioUrl || ''} />
 
         <div className="space-y-2">
             <Label htmlFor="nombre">Nombre de la Ruta</Label>
-            <Input id="nombre" name="nombre" defaultValue={route?.nombre || ""} required />
+            <Input id="nombre" name="nombre" defaultValue={route?.nombre || ""} required readOnly={isEditing} />
+            {isEditing && <p className="text-xs text-muted-foreground">El nombre no se puede cambiar porque define el ID de la ruta.</p>}
         </div>
         <div className="space-y-2">
             <Label htmlFor="especificacion">Especificación (Opcional)</Label>
