@@ -42,16 +42,5 @@
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus4/600/400",
     "lastUpdated": "2024-05-19T11:00:00Z",
     "especificacion": ""
-  },
-  {
-    "id": "test-test-1721245037108",
-    "nombre": "Test - test",
-    "especificacion": "imagen",
-    "category": "grecia",
-    "duracionMin": 0,
-    "tarifaCRC": 0,
-    "imagenTarjetaUrl": "https://storage.googleapis.com/stg-studio-notfound-dev.appspot.com/1721245033785_H8yqcTqT.jpeg",
-    "imagenHorarioUrl": "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
-    "lastUpdated": "2024-07-17T19:37:17.108Z"
   }
 ]
