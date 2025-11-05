@@ -1,43 +1,34 @@
-
 // THIS FILE IS ONLY FOR SERVER-SIDE USE
 import 'server-only';
-import { initializeFirebase } from '@/firebase/server';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import fs from 'fs/promises';
+import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
 
-async function getData<T>(collectionName: string): Promise<T[]> {
-    try {
-        const { firestore } = initializeFirebase();
-        const col = collection(firestore, collectionName);
-        const snapshot = await getDocs(col);
-        
-        if (snapshot.empty) {
-            console.log(`No documents found in ${collectionName} collection.`);
-            return [];
-        }
+const dataPath = path.join(process.cwd(), 'src', 'data');
 
-        const data: T[] = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as T));
-
-        return data;
-
-    } catch (error) {
-        console.error(`Could not read from Firestore collection ${collectionName}:`, error);
-        return [];
+async function readJsonData<T>(filename: string): Promise<T[]> {
+  const filePath = path.join(dataPath, filename);
+  try {
+    const jsonData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(jsonData);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      console.log(`Data file not found: ${filename}, returning empty array.`);
+      return []; // Return empty array if file doesn't exist
     }
+    console.error(`Error reading data from ${filename}:`, error);
+    throw new Error(`Could not read data from ${filename}.`);
+  }
 }
 
-
 export async function getRoutes(): Promise<Route[]> {
-    return getData<Route>('routes');
+    return readJsonData<Route>('routes.json');
 }
 
 export async function getAlerts(): Promise<Alert[]> {
-    return getData<Alert>('alerts');
+    return readJsonData<Alert>('alerts.json');
 }
 
 export async function getDrivers(): Promise<Driver[]> {
-    return getData<Driver>('drivers');
+    return readJsonData<Driver>('drivers.json');
 }
