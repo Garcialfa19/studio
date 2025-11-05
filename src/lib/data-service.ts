@@ -18,6 +18,8 @@ async function readData<T>(collectionName: string): Promise<T[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
   } catch (error) {
     console.error(`Error reading collection ${collectionName}:`, error);
+    // In a real app, you might want to throw the error or handle it differently.
+    // For now, returning an empty array to prevent page crashes.
     return [];
   }
 }
