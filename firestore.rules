@@ -2,48 +2,52 @@
  * @file Firebase Security Rules for Firestore.
  *
  * Core Philosophy:
- * This ruleset implements a public read-only model for the `routes` and `alerts` collections.
- * There is no user-specific data, so authorization is based on global access rather than ownership or roles.
- * All writes are denied, effectively making the data read-only from the client-side.
+ * This ruleset implements a public read-only model for general users,
+ * while allowing any authenticated user to perform write operations.
+ * This is suitable for an admin-managed application where all logged-in
+ * users are considered administrators.
  *
  * Data Structure:
  * - /routes/{routeId}: Stores route information.
  * - /alerts/{alertId}: Stores alert messages.
+ * - /drivers/{driverId}: Stores driver information.
  *
  * Key Security Decisions:
- * - No user listing is allowed.
- * - Public read access is granted for all documents in both collections.
- * - All write operations (create, update, delete) are explicitly denied to prevent unauthorized data modification.
+ * - Public read access is granted for all collections.
+ * - Write operations (create, update, delete) are restricted to authenticated users.
  *
- * Denormalization for Authorization: N/A (no authorization needed for reads).
- * Structural Segregation: Routes and alerts are stored in separate collections, each with its own read-only access policy.
+ * Denormalization for Authorization: N/A (Authorization is based on auth status, not data roles).
+ * Structural Segregation: Routes, alerts, and drivers are in separate collections, each with its own access policy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read route information, but denies all writes.
+     * @description Allows public read access, but restricts writes to authenticated users.
      * @path /routes/{routeId}
-     * @allow (get, list) - Any user can read the route information.
-     * @deny (create, update, delete) - No user can create, update, or delete routes.
-     * @principle Public read-only access for route data.
      */
     match /routes/{routeId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow write: if request.auth != null;
     }
 
     /**
-     * @description Allows anyone to read alert messages, but denies all writes.
+     * @description Allows public read access, but restricts writes to authenticated users.
      * @path /alerts/{alertId}
-     * @allow (get, list) - Any user can read the alert message.
-     * @deny (create, update, delete) - No user can create, update, or delete alerts.
-     * @principle Public read-only access for alert data.
      */
     match /alerts/{alertId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow write: if request.auth != null;
+    }
+
+     /**
+     * @description Allows public read access, but restricts writes to authenticated users.
+     * @path /drivers/{driverId}
+     */
+    match /drivers/{driverId} {
+      allow get, list: if true;
+      allow write: if request.auth != null;
     }
   }
 }
