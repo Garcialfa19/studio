@@ -3,8 +3,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,15 +22,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,47 +42,21 @@ import {
 } from "@/components/ui/alert-dialog"
 import { saveRoute, deleteRoute } from "@/lib/actions";
 
-const routeSchema = z.object({
-  id: z.string().optional(),
-  nombre: z.string().min(1, "El nombre es requerido."),
-  especificacion: z.string().optional(),
-  category: z.enum(["grecia", "sarchi"], { required_error: "La categoría es requerida."}),
-  duracionMin: z.coerce.number().min(0, "La duración no puede ser negativa."),
-  tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
-  imagenTarjetaUrl: z.any().optional(),
-  imagenHorarioUrl: z.any().optional(),
-});
-
-type RouteFormValues = z.infer<typeof routeSchema>;
-
 const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | null, onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
-  const form = useForm<RouteFormValues>({
-    resolver: zodResolver(routeSchema),
-    defaultValues: {
-      id: route?.id || "",
-      nombre: route?.nombre || "",
-      especificacion: route?.especificacion || "",
-      category: route?.category || "grecia",
-      duracionMin: route?.duracionMin || 0,
-      tarifaCRC: route?.tarifaCRC || 0,
-    },
-  });
-  const { formState, handleSubmit, control, register } = form;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    
+    setIsSubmitting(true);
+
     const formData = new FormData(event.currentTarget);
     if(route?.id) {
         formData.append('id', route.id);
     }
     formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
     formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
-
-
-    setIsSubmitting(true);
+    
     try {
       await saveRoute(formData);
       toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
@@ -102,85 +66,62 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
       console.error(error);
       toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la ruta." });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <FormField control={control} name="nombre" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nombre de la Ruta</FormLabel>
-            <FormControl><Input {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={control} name="especificacion" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Especificación (Opcional)</FormLabel>
-            <FormControl><Input {...field} placeholder="Ej: Por Churuca" /></FormControl>
-            <FormDescription>Un detalle corto sobre la ruta.</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )} />
-         <FormField control={control} name="category" render={({ field }) => (
-          <FormItem><FormLabel>Categoría</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl><SelectTrigger><SelectValue placeholder="Selecciona una categoría"/></SelectTrigger></FormControl>
-              <SelectContent>
-                <SelectItem value="grecia">Grecia</SelectItem>
-                <SelectItem value="sarchi">Sarchí</SelectItem>
-              </SelectContent>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre de la Ruta</Label>
+            <Input id="nombre" name="nombre" defaultValue={route?.nombre || ""} required />
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="especificacion">Especificación (Opcional)</Label>
+            <Input id="especificacion" name="especificacion" defaultValue={route?.especificacion || ""} placeholder="Ej: Por Churuca" />
+        </div>
+         <div className="space-y-2">
+            <Label>Categoría</Label>
+            <Select name="category" defaultValue={route?.category || "grecia"} required>
+                <SelectTrigger><SelectValue placeholder="Selecciona una categoría"/></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="grecia">Grecia</SelectItem>
+                    <SelectItem value="sarchi">Sarchí</SelectItem>
+                </SelectContent>
             </Select>
-            <FormDescription>La sección donde aparecerá esta ruta.</FormDescription>
-            <FormMessage />
-            </FormItem>
-        )} />
+        </div>
         <div className="grid grid-cols-2 gap-4">
-          <FormField control={control} name="duracionMin" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duración (min)</FormLabel>
-              <FormControl><Input type="number" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name="tarifaCRC" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tarifa (₡)</FormLabel>
-              <FormControl><Input type="number" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+          <div className="space-y-2">
+            <Label htmlFor="duracionMin">Duración (min)</Label>
+            <Input id="duracionMin" name="duracionMin" type="number" defaultValue={route?.duracionMin || 0} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tarifaCRC">Tarifa (₡)</Label>
+            <Input id="tarifaCRC" name="tarifaCRC" type="number" defaultValue={route?.tarifaCRC || 0} required />
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <FormItem>
-              <FormLabel>Imagen de Tarjeta</FormLabel>
+            <div className="space-y-2">
+              <Label htmlFor="imagenTarjetaUrl">Imagen de Tarjeta</Label>
               {route?.imagenTarjetaUrl && (
                   <div className="relative w-full h-24 mb-2">
                       <Image src={route.imagenTarjetaUrl} alt="Vista previa de tarjeta" layout="fill" objectFit="contain" className="rounded-md border" />
                   </div>
               )}
-              <FormControl>
-                  <Input type="file" {...register('imagenTarjetaUrl')} />
-              </FormControl>
-              <FormDescription>Subir una nueva imagen sobreescribirá la actual.</FormDescription>
-              <FormMessage />
-          </FormItem>
-          <FormItem>
-              <FormLabel>Imagen de Horario</FormLabel>
+              <Input id="imagenTarjetaUrl" name="imagenTarjetaUrl" type="file" />
+              <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="imagenHorarioUrl">Imagen de Horario</Label>
                {route?.imagenHorarioUrl && (
                   <div className="relative w-full h-24 mb-2">
                       <Image src={route.imagenHorarioUrl} alt="Vista previa de horario" layout="fill" objectFit="contain" className="rounded-md border" />
                   </div>
               )}
-              <FormControl>
-                   <Input type="file" {...register('imagenHorarioUrl')} />
-              </FormControl>
-               <FormDescription>Subir una nueva imagen sobreescribirá la actual.</FormDescription>
-              <FormMessage />
-          </FormItem>
+              <Input id="imagenHorarioUrl" name="imagenHorarioUrl" type="file" />
+              <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
+            </div>
         </div>
 
         <DialogFooter>
@@ -188,7 +129,6 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
           <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Guardar'}</Button>
         </DialogFooter>
       </form>
-    </Form>
   );
 };
 
@@ -293,4 +233,3 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
     </Card>
   );
 }
-
