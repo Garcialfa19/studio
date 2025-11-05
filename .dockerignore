@@ -1,0 +1,27 @@
+# Docker ignore file
+
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+
+# Next.js build folder
+.next
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Misc
+README.md
+*.md
+npm-debug.log
+.env
+.env.local
+.env.development
+.env.production
+
+# Editor configs
+.vscode
