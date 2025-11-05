@@ -1,7 +1,10 @@
+
 import { NextResponse } from 'next/server';
 import { getDrivers } from '@/lib/data-service';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export async function GET() {
+  noStore();
   try {
     const drivers = await getDrivers();
     return NextResponse.json(drivers);

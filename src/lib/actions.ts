@@ -6,43 +6,20 @@ import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 // --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
 
-async function readData<T>(filename: string): Promise<T[]> {
-  try {
-    const filePath = dataFilePath(filename);
-    const jsonData = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(jsonData);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return []; // Return empty array if file doesn't exist
-    }
-    console.error(`Error reading data from ${filename}:`, error);
-    throw new Error(`Could not read data from ${filename}.`);
-  }
-}
-
-async function writeData<T>(filename: string, data: T[]): Promise<void> {
-  try {
-    const filePath = dataFilePath(filename);
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
-    console.error(`Error writing data to ${filename}:`, error);
-    throw new Error(`Could not write data to ${filename}.`);
-  }
-}
-
 async function saveFileToFirebase(file: File): Promise<string> {
-    const { app } = initializeFirebase();
+    const { app } = initializeServerFirebase();
     const storage = getStorage(app);
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const storageRef = ref(storage, uniqueFilename);
+    const storageRef = ref(storage, `uploads/${uniqueFilename}`);
 
     await uploadBytes(storageRef, fileBuffer, { contentType: file.type });
     const downloadUrl = await getDownloadURL(storageRef);
@@ -56,7 +33,7 @@ async function saveFileToFirebase(file: File): Promise<string> {
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
-  especificacion: z.string().optional(),
+  especificacion: z.string().optional().default(''),
   category: z.enum(["grecia", "sarchi"]),
   duracionMin: z.coerce.number().min(0, "La duración no puede ser negativa."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
@@ -64,6 +41,7 @@ const routeSchema = z.object({
 
 
 export async function saveRoute(formData: FormData) {
+    const { firestore } = initializeServerFirebase();
     const rawData = Object.fromEntries(formData.entries());
     
     const validatedFields = routeSchema.safeParse(rawData);
@@ -74,7 +52,6 @@ export async function saveRoute(formData: FormData) {
     }
     
     const { data } = validatedFields;
-    const routes = await readData<Route>('routes.json');
     const now = new Date().toISOString();
     
     let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
@@ -92,33 +69,24 @@ export async function saveRoute(formData: FormData) {
     
     const routeId = formData.get('id') as string | undefined;
 
+    const routeData = {
+        ...data,
+        imagenTarjetaUrl: imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
+        imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
+        lastUpdated: now,
+    };
+    delete (routeData as any).id;
+
+
     if (routeId) {
         // Update existing route
-        const index = routes.findIndex(r => r.id === routeId);
-        if (index > -1) {
-            routes[index] = { 
-                ...routes[index], 
-                ...data, 
-                especificacion: data.especificacion || '',
-                imagenTarjetaUrl: imagenTarjetaUrl,
-                imagenHorarioUrl: imagenHorarioUrl,
-                lastUpdated: now 
-            };
-        }
+        const routeRef = doc(firestore, 'routes', routeId);
+        await updateDoc(routeRef, routeData);
     } else {
         // Create new route
-        const newRoute: Route = {
-            id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-            ...data,
-            especificacion: data.especificacion || '',
-            imagenTarjetaUrl: imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
-            imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
-            lastUpdated: now,
-        };
-        routes.push(newRoute);
+        await addDoc(collection(firestore, 'routes'), routeData);
     }
 
-    await writeData('routes.json', routes);
     revalidatePath('/admin/dashboard');
     revalidatePath('/');
     revalidatePath('/api/routes');
@@ -126,9 +94,9 @@ export async function saveRoute(formData: FormData) {
 
 
 export async function deleteRoute(id: string) {
-  let routes = await readData<Route>('routes.json');
-  routes = routes.filter(r => r.id !== id);
-  await writeData('routes.json', routes);
+  const { firestore } = initializeServerFirebase();
+  await deleteDoc(doc(firestore, 'routes', id));
+  
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
   revalidatePath('/api/routes');
@@ -142,35 +110,32 @@ const alertSchema = z.object({
 });
 
 export async function saveAlert(alertData: Partial<Alert>) {
+    const { firestore } = initializeServerFirebase();
     const validatedAlert = alertSchema.parse(alertData);
-    const alerts = await readData<Alert>('alerts.json');
     const now = new Date().toISOString();
 
+    const dataToSave = {
+      titulo: validatedAlert.titulo,
+      lastUpdated: now,
+    };
+
     if (validatedAlert.id) {
-        const index = alerts.findIndex(a => a.id === validatedAlert.id);
-        if (index > -1) {
-            alerts[index] = { ...alerts[index], ...validatedAlert, lastUpdated: now };
-        }
+        const alertRef = doc(firestore, 'alerts', validatedAlert.id);
+        await updateDoc(alertRef, dataToSave);
     } else {
-        const newAlert: Alert = {
-            id: String(Date.now()),
-            ...validatedAlert,
-            lastUpdated: now,
-        };
-        alerts.push(newAlert);
+        await addDoc(collection(firestore, 'alerts'), dataToSave);
     }
 
-    await writeData('alerts.json', alerts);
     revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
     revalidatePath('/api/alerts');
 }
 
 export async function deleteAlert(id: string) {
-    let alerts = await readData<Alert>('alerts.json');
-    alerts = alerts.filter(a => a.id !== id);
-    await writeData('alerts.json', alerts);
-revalidatePath('/admin/dashboard');
+    const { firestore } = initializeServerFirebase();
+    await deleteDoc(doc(firestore, 'alerts', id));
+
+    revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
     revalidatePath('/api/alerts');
 }
@@ -187,33 +152,94 @@ const driverSchema = z.object({
 });
 
 export async function saveDriver(driverData: Partial<Driver>) {
+    const { firestore } = initializeServerFirebase();
     const validatedDriver = driverSchema.parse(driverData);
-    const drivers = await readData<Driver>('drivers.json');
     const now = new Date().toISOString();
 
+    const dataToSave = {
+        ...validatedDriver,
+        lastUpdated: now,
+    };
+    delete (dataToSave as any).id;
+
+
     if (validatedDriver.id) {
-        const index = drivers.findIndex(d => d.id === validatedDriver.id);
-        if (index > -1) {
-            drivers[index] = { ...drivers[index], ...validatedDriver, lastUpdated: now };
-        }
+        const driverRef = doc(firestore, 'drivers', validatedDriver.id);
+        await updateDoc(driverRef, dataToSave);
     } else {
-        const newDriver: Driver = {
-            id: 'd' + String(Date.now()),
-            ...validatedDriver,
-            lastUpdated: now,
-        };
-        drivers.push(newDriver);
+        await addDoc(collection(firestore, 'drivers'), dataToSave);
     }
     
-    await writeData('drivers.json', drivers);
     revalidatePath('/admin/dashboard');
     revalidatePath('/api/drivers');
 }
 
 export async function deleteDriver(id: string) {
-    let drivers = await readData<Driver>('drivers.json');
-    drivers = drivers.filter(d => d.id !== id);
-    await writeData('drivers.json', drivers);
+    const { firestore } = initializeServerFirebase();
+    await deleteDoc(doc(firestore, 'drivers', id));
+
     revalidatePath('/admin/dashboard');
     revalidatePath('/api/drivers');
+}
+
+
+// --- Data Migration Action ---
+async function readJsonData(filename: string) {
+  const filePath = dataFilePath(filename);
+  try {
+    const jsonData = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(jsonData);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+export async function migrateDataToFirestore() {
+  const { firestore } = initializeServerFirebase();
+
+  try {
+    const routes = await readJsonData('routes.json');
+    const alerts = await readJsonData('alerts.json');
+    const drivers = await readJsonData('drivers.json');
+    
+    if (routes.length === 0 && alerts.length === 0 && drivers.length === 0) {
+      return { success: true, message: 'No data found in JSON files to migrate.' };
+    }
+
+    const batch = writeBatch(firestore);
+
+    routes.forEach((item: Route) => {
+      const { id, ...data } = item;
+      const docRef = doc(firestore, 'routes', id);
+      batch.set(docRef, data);
+    });
+
+    alerts.forEach((item: Alert) => {
+      const { id, ...data } = item;
+      const docRef = doc(firestore, 'alerts', id);
+      batch.set(docRef, data);
+    });
+
+    drivers.forEach((item: Driver) => {
+      const { id, ...data } = item;
+      const docRef = doc(firestore, 'drivers', id);
+      batch.set(docRef, data);
+    });
+
+    await batch.commit();
+    
+    // Optional: Clear JSON files after successful migration
+    // await fs.writeFile(dataFilePath('routes.json'), '[]', 'utf-8');
+    // await fs.writeFile(dataFilePath('alerts.json'), '[]', 'utf-8');
+    // await fs.writeFile(dataFilePath('drivers.json'), '[]', 'utf-8');
+
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/');
+
+    return { success: true, message: 'Data migrated to Firestore successfully.' };
+  } catch (error: any) {
+    console.error("Migration failed:", error);
+    return { success: false, error: error.message || 'An unknown error occurred during migration.' };
+  }
 }

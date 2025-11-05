@@ -1,7 +1,10 @@
+
 import { NextResponse } from 'next/server';
 import { getAlerts } from '@/lib/data-service';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export async function GET() {
+  noStore();
   try {
     const alerts = await getAlerts();
     return NextResponse.json(alerts);
