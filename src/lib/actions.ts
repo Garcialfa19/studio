@@ -1,10 +1,11 @@
+
 'use server';
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase } from '@/firebase/server';
-import { doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -58,7 +59,6 @@ export async function saveRoute(formData: FormData) {
   }
 
   const data = validatedFields.data;
-  // Use the name to generate the ID (slug)
   const routeId = createSlug(data.nombre);
   const now = new Date().toISOString();
 
@@ -90,7 +90,6 @@ export async function saveRoute(formData: FormData) {
   };
 
   const routeRef = doc(firestore, 'routes', routeId);
-  // Use setDoc with merge to create or update the document
   await setDoc(routeRef, routeData, { merge: true });
 
   revalidatePath('/admin/dashboard');
