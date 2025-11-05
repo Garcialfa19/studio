@@ -1,8 +1,6 @@
 'use client';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/firebase";
-import AdminDashboard from "@/components/admin/AdminDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
@@ -10,6 +8,8 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Route, Alert, Driver } from "@/lib/definitions";
 import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service-client";
+import { useAuth } from "@/firebase/provider";
+import AdminDashboard from "./AdminDashboard";
 
 type AdminDashboardClientProps = {
   initialData: {
@@ -20,20 +20,22 @@ type AdminDashboardClientProps = {
 };
 
 export default function AdminDashboardClient({ initialData }: AdminDashboardClientProps) {
-  const { user, loading, logout } = useAuth();
+  const { user, isUserLoading, auth } = useAuth();
   const router = useRouter();
   
   const [data, setData] = useState(initialData);
   const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.push('/admin');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
   
   const handleLogout = async () => {
-    await logout();
+    if (auth) {
+      await auth.signOut();
+    }
     router.push('/admin');
   };
 
@@ -54,7 +56,7 @@ export default function AdminDashboardClient({ initialData }: AdminDashboardClie
   };
 
 
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="space-y-4 p-4 w-full max-w-4xl">

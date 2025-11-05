@@ -3,7 +3,7 @@
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
 interface FirebaseProviderProps {
@@ -47,6 +47,15 @@ export interface UserHookResult { // Renamed from UserAuthHookResult for consist
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
+}
+
+// Return type for useAuth() hook
+export interface AuthHookResult {
+  user: User | null;
+  loading: boolean;
+  error: Error | null;
+  auth: Auth | null;
+  logout: () => Promise<void>;
 }
 
 // React Context
@@ -136,11 +145,19 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-/** Hook to access Firebase Auth instance. */
-export const useAuth = (): Auth => {
-  const { auth } = useFirebase();
-  return auth;
+/** Hook to access Firebase Auth instance and user state. */
+export const useAuth = (): AuthHookResult => {
+    const { auth, user, isUserLoading, userError } = useFirebase();
+
+    const logout = async () => {
+        if (auth) {
+            await signOut(auth);
+        }
+    };
+
+    return { auth, user, loading: isUserLoading, error: userError, logout };
 };
+
 
 /** Hook to access Firestore instance. */
 export const useFirestore = (): Firestore => {
