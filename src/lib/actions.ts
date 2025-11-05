@@ -2,10 +2,14 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { initializeFirebase } from '@/firebase';
 import type { Route, Alert, Driver } from "./definitions";
+import routesData from '@/data/routes.json';
+import alertsData from '@/data/alerts.json';
+import driversData from '@/data/drivers.json';
+
 
 // --- Initialize Firebase ---
 const { firestore, app } = initializeFirebase();
@@ -79,7 +83,7 @@ export async function saveRoute(formData: FormData) {
         imagenTarjetaUrl = await saveFile(data.imagenTarjeta, 'cards');
     }
 
-    const routeData = {
+    const routeData: Omit<Route, 'id'> = {
         nombre: data.nombre,
         category: data.category,
         duracionMin: data.duracionMin,
@@ -134,16 +138,13 @@ export async function saveAlert(formData: FormData) {
     const data = validation.data;
     const alertsCollection = collection(firestore, 'alerts');
     
-    const alertData = {
+    const alertData: Omit<Alert, 'id'> = {
       titulo: data.titulo,
       lastUpdated: new Date().toISOString(),
     };
 
-    if (data.id) { // This part is for editing, but current UI only adds.
-      await setDoc(doc(alertsCollection, data.id), alertData, { merge: true });
-    } else {
-      await addDoc(alertsCollection, alertData);
-    }
+    const docRef = data.id ? doc(alertsCollection, data.id) : doc(alertsCollection);
+    await setDoc(docRef, alertData, { merge: true });
 
     revalidatePath("/");
     revalidatePath("/alertas");
@@ -197,7 +198,7 @@ export async function saveDriver(formData: FormData) {
       const data = validation.data;
       const driversCollection = collection(firestore, 'drivers');
       
-      const driverData = {
+      const driverData: Omit<Driver, 'id'> = {
           nombre: data.nombre,
           busPlate: data.busPlate || '',
           routeId: data.routeId,
@@ -211,7 +212,8 @@ export async function saveDriver(formData: FormData) {
           docRef = doc(driversCollection, data.id);
           await setDoc(docRef, driverData, { merge: true });
       } else {
-          docRef = await addDoc(driversCollection, driverData);
+          docRef = doc(driversCollection);
+          await setDoc(docRef, driverData);
       }
   
       revalidatePath("/admin/dashboard");
@@ -231,4 +233,50 @@ export async function deleteDriver(id: string) {
       console.error("Error deleting driver:", error);
       return { success: false, error: "No se pudo eliminar el chofer." };
     }
+}
+
+// --- Data Migration Action ---
+export async function migrateDataToFirestore() {
+  try {
+    const batch = writeBatch(firestore);
+
+    // Migrate Routes
+    const routesCol = collection(firestore, 'routes');
+    routesData.forEach(route => {
+      const { id, ...data } = route;
+      const docRef = doc(routesCol, id);
+      batch.set(docRef, data);
+    });
+
+    // Migrate Alerts
+    const alertsCol = collection(firestore, 'alerts');
+    alertsData.forEach(alert => {
+      const { id, ...data } = alert;
+      const docRef = doc(alertsCol, id);
+      batch.set(docRef, data);
+    });
+    
+    // Migrate Drivers
+    const driversCol = collection(firestore, 'drivers');
+    driversData.forEach(driver => {
+        const { id, ...data } = driver;
+        const docRef = doc(driversCol, id);
+        batch.set(docRef, data);
+    });
+
+    await batch.commit();
+
+    // Revalidate all relevant paths
+    revalidatePath("/");
+    revalidatePath("/alertas");
+    revalidatePath("/admin/dashboard");
+    
+    const message = `Se migraron ${routesData.length} rutas, ${alertsData.length} alertas y ${driversData.length} choferes.`;
+    return { success: true, message };
+
+  } catch (error) {
+    console.error("Error during data migration:", error);
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido durante la migración.";
+    return { success: false, error: `No se pudo migrar la data a Firestore. ${errorMessage}` };
+  }
 }

@@ -4,8 +4,8 @@ export type Route = {
   category: "grecia" | "sarchi";
   duracionMin: number;
   tarifaCRC: number;
-  imagenHorarioUrl: string;
-  imagenTarjetaUrl: string;
+  imagenHorarioUrl?: string;
+  imagenTarjetaUrl?: string;
   activo: boolean;
   lastUpdated: string;
 };

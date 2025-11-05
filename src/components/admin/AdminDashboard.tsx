@@ -5,6 +5,7 @@ import RoutesManager from "@/components/admin/RoutesManager";
 import AlertsManager from "@/components/admin/AlertsManager";
 import DriversManager from "@/components/admin/DriversManager";
 import type { Route, Alert, Driver } from "@/lib/definitions";
+import { DataMigration } from "./DataMigration";
 
 type AdminDashboardProps = {
   initialRoutes: Route[];
@@ -15,22 +16,23 @@ type AdminDashboardProps = {
 export default function AdminDashboard({ initialRoutes, initialAlerts, initialDrivers }: AdminDashboardProps) {
   return (
     <Tabs defaultValue="routes">
-      <div className="flex justify-center">
-        <TabsList>
-          <TabsTrigger value="routes">Gestionar Rutas</TabsTrigger>
-          <TabsTrigger value="alerts">Gestionar Alertas</TabsTrigger>
-          <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
-        </TabsList>
-      </div>
-      <TabsContent value="routes">
-        <RoutesManager routes={initialRoutes} />
-      </TabsContent>
-      <TabsContent value="alerts">
-        <AlertsManager alerts={initialAlerts} />
-      </TabsContent>
-      <TabsContent value="drivers">
-        <DriversManager drivers={initialDrivers} routes={initialRoutes} />
-      </TabsContent>
+        <div className="flex justify-center mb-4">
+            <TabsList>
+            <TabsTrigger value="routes">Gestionar Rutas</TabsTrigger>
+            <TabsTrigger value="alerts">Gestionar Alertas</TabsTrigger>
+            <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
+            </TabsList>
+        </div>
+        <DataMigration />
+        <TabsContent value="routes">
+            <RoutesManager routes={initialRoutes} />
+        </TabsContent>
+        <TabsContent value="alerts">
+            <AlertsManager alerts={initialAlerts} />
+        </TabsContent>
+        <TabsContent value="drivers">
+            <DriversManager drivers={initialDrivers} routes={initialRoutes} />
+        </TabsContent>
     </Tabs>
   );
 }

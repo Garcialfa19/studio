@@ -1,0 +1,58 @@
+
+[
+    {
+      "id": "grecia-sarchi",
+      "nombre": "Grecia – Sarchí",
+      "category": "grecia",
+      "duracionMin": 25,
+      "tarifaCRC": 675,
+      "imagenHorarioUrl": "https://images.unsplash.com/photo-1755699877166-c236690d9fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imagenTarjetaUrl": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidXN8ZW58MHx8fHwxNjg0MjU4MjM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "activo": true,
+      "lastUpdated": "2024-05-20T09:00:00Z"
+    },
+    {
+      "id": "grecia-poas",
+      "nombre": "Grecia – Poás",
+      "category": "grecia",
+      "duracionMin": 45,
+      "tarifaCRC": 850,
+      "imagenHorarioUrl": "https://images.unsplash.com/photo-1620841946140-f6b5e40ce49a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imagenTarjetaUrl": "https://images.unsplash.com/photo-1570125909232-eb263c187943?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidXN8ZW58MHx8fHwxNjg0MjU4MjM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "activo": true,
+      "lastUpdated": "2024-05-18T14:00:00Z"
+    },
+    {
+      "id": "sarchi-naranjo",
+      "nombre": "Sarchí - Naranjo",
+      "category": "sarchi",
+      "duracionMin": 20,
+      "tarifaCRC": 500,
+      "imagenHorarioUrl": "https://images.unsplash.com/photo-1755699877166-c236690d9fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imagenTarjetaUrl": "https://images.unsplash.com/photo-1517737815933-44584a323a63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxidXN8ZW58MHx8fHwxNjg0MjU4MjM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "activo": true,
+      "lastUpdated": "2024-05-19T11:00:00Z"
+    },
+    {
+        "id": "sarchi-sanpedro",
+        "nombre": "Sarchí - San Pedro",
+        "category": "sarchi",
+        "duracionMin": 15,
+        "tarifaCRC": 450,
+        "imagenHorarioUrl": "https://images.unsplash.com/photo-1620841946140-f6b5e40ce49a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        "imagenTarjetaUrl": "https://images.unsplash.com/photo-1599609519885-34a236491929?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxidXN8ZW58MHx8fHwxNjg0MjU4MjM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+        "activo": true,
+        "lastUpdated": "2024-05-19T11:00:00Z"
+      },
+      {
+        "id": "grecia-sanroque",
+        "nombre": "Grecia - San Roque",
+        "category": "grecia",
+        "duracionMin": 20,
+        "tarifaCRC": 550,
+        "imagenHorarioUrl": "https://images.unsplash.com/photo-1755699877166-c236690d9fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        "imagenTarjetaUrl": "https://images.unsplash.com/photo-1618495047434-90f1d1b827fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXN8ZW58MHx8fHwxNjg0MjU4MjM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+        "activo": false,
+        "lastUpdated": "2024-05-10T18:00:00Z"
+      }
+]

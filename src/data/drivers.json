@@ -1,0 +1,30 @@
+
+[
+    {
+      "id": "d1",
+      "nombre": "Juan Pérez",
+      "busPlate": "AB 1234",
+      "routeId": "grecia-poas",
+      "status": "En ruta",
+      "comment": "Inició turno a las 6am.",
+      "lastUpdated": "2024-05-20T08:00:00Z"
+    },
+    {
+      "id": "d2",
+      "nombre": "Ana Gómez",
+      "busPlate": "BC 5678",
+      "routeId": "grecia-sarchi",
+      "status": "En descanso",
+      "comment": "Próximo turno a las 2pm.",
+      "lastUpdated": "2024-05-20T11:30:00Z"
+    },
+    {
+        "id": "d3",
+        "nombre": "Carlos Rojas",
+        "busPlate": "CD 9012",
+        "routeId": null,
+        "status": "En taller",
+        "comment": "Mantenimiento preventivo.",
+        "lastUpdated": "2024-05-19T15:00:00Z"
+    }
+]
