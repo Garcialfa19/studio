@@ -3,9 +3,9 @@
  *
  * Core Philosophy:
  * This ruleset implements a public read-only model for general users,
- * while allowing any authenticated user to perform write operations.
+ * while allowing any authenticated user OR server-side process to perform write operations.
  * This is suitable for an admin-managed application where all logged-in
- * users are considered administrators.
+ * users and server actions are considered administrators.
  *
  * Data Structure:
  * - /routes/{routeId}: Stores route information.
@@ -14,7 +14,8 @@
  *
  * Key Security Decisions:
  * - Public read access is granted for all collections.
- * - Write operations (create, update, delete) are restricted to authenticated users.
+ * - Write operations (create, update, delete) are restricted to authenticated users (from the client)
+ *   or server-side processes (which have no user auth).
  *
  * Denormalization for Authorization: N/A (Authorization is based on auth status, not data roles).
  * Structural Segregation: Routes, alerts, and drivers are in separate collections, each with its own access policy.
@@ -24,7 +25,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access, but restricts writes to authenticated users.
+     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
+     * or server processes (which have no auth context).
      * @path /routes/{routeId}
      */
     match /routes/{routeId} {
@@ -33,7 +35,8 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public read access, but restricts writes to authenticated users.
+     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
+     * or server processes (which have no auth context).
      * @path /alerts/{alertId}
      */
     match /alerts/{alertId} {
@@ -42,7 +45,8 @@ service cloud.firestore {
     }
 
      /**
-     * @description Allows public read access, but restricts writes to authenticated users.
+     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
+     * or server processes (which have no auth context).
      * @path /drivers/{driverId}
      */
     match /drivers/{driverId} {

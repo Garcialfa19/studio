@@ -141,6 +141,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the ASG Digital application's requirements for managing routes and alerts. The structure includes separate collections for `routes`, `alerts`, and `drivers`. Data is public-readable, but write access is restricted to authenticated users, who are assumed to be administrators. This segregation simplifies security rules, as each collection can be secured independently. Since all authenticated users are treated as admins, there's no need for a complex role-based access control system in the rules, which simplifies authorization logic."
+    "reasoning": "The Firestore data structure is designed to support the ASG Digital application's requirements for managing routes and alerts. The structure includes separate collections for `routes`, `alerts`, and `drivers`. Data is public-readable, but write access is restricted to authenticated users (client-side) or trusted server-side processes (which do not have a user auth object). This segregation simplifies security rules, as each collection can be secured independently. This model supports both user-driven admin actions and automated or server-driven data management tasks like migration."
   }
 }
