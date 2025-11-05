@@ -15,7 +15,6 @@ async function readData<T>(filename: string): Promise<T[]> {
     const jsonData = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(jsonData);
   } catch (error) {
-    // If the file doesn't exist, return an empty array
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return [];
     }
@@ -29,6 +28,19 @@ async function writeData<T>(filename: string, data: T[]): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+// Helper to save uploaded file
+async function saveFile(file: File, subdir: string): Promise<string> {
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', subdir);
+    await fs.mkdir(uploadsDir, { recursive: true });
+
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uniqueFilename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const filePath = path.join(uploadsDir, uniqueFilename);
+
+    await fs.writeFile(filePath, fileBuffer);
+
+    return `/uploads/${subdir}/${uniqueFilename}`;
+}
 
 // Route Actions
 const routeSchema = z.object({
@@ -37,35 +49,67 @@ const routeSchema = z.object({
   category: z.enum(["grecia", "sarchi"]),
   duracionMin: z.coerce.number(),
   tarifaCRC: z.coerce.number(),
-  imagenHorarioUrl: z.string().optional(),
-  imagenTarjetaUrl: z.string().optional(),
   activo: z.boolean(),
 });
 
-export async function saveRoute(routeData: Partial<Route>) {
-  const validatedRoute = routeSchema.parse(routeData);
-  const routes = await readData<Route>('routes.json');
-  const now = new Date().toISOString();
+export async function saveRoute(formData: FormData) {
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = routeSchema.safeParse({
+        ...rawData,
+        duracionMin: Number(rawData.duracionMin),
+        tarifaCRC: Number(rawData.tarifaCRC),
+        activo: rawData.activo === 'on'
+    });
 
-  if (validatedRoute.id) {
-    // Update existing route
-    const index = routes.findIndex(r => r.id === validatedRoute.id);
-    if (index > -1) {
-      routes[index] = { ...routes[index], ...validatedRoute, lastUpdated: now };
+    if (!validatedFields.success) {
+        console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
+        throw new Error('Invalid route data.');
     }
-  } else {
-    // Create new route
-    const newRoute: Route = {
-      id: validatedRoute.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-      ...validatedRoute,
-      lastUpdated: now,
-    };
-    routes.push(newRoute);
-  }
+    
+    const { data } = validatedFields;
+    const routes = await readData<Route>('routes.json');
+    const now = new Date().toISOString();
 
-  await writeData('routes.json', routes);
-  revalidatePath('/admin/dashboard');
-  revalidatePath('/');
+    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string || '';
+    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string || '';
+
+    const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
+    if (cardImageFile && cardImageFile.size > 0) {
+        imagenTarjetaUrl = await saveFile(cardImageFile, 'cards');
+    }
+
+    const scheduleImageFile = formData.get('imagenHorarioUrl') as File | null;
+    if (scheduleImageFile && scheduleImageFile.size > 0) {
+        imagenHorarioUrl = await saveFile(scheduleImageFile, 'schedules');
+    }
+
+    if (data.id) {
+        // Update existing route
+        const index = routes.findIndex(r => r.id === data.id);
+        if (index > -1) {
+            routes[index] = { 
+                ...routes[index], 
+                ...data, 
+                imagenTarjetaUrl,
+                imagenHorarioUrl,
+                lastUpdated: now 
+            };
+        }
+    } else {
+        // Create new route
+        const newRoute: Route = {
+            id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+            ...data,
+            imagenTarjetaUrl: imagenTarjetaUrl || 'https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen',
+            imagenHorarioUrl: imagenHorarioUrl || 'https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario',
+            lastUpdated: now,
+        };
+        routes.push(newRoute);
+    }
+
+    await writeData('routes.json', routes);
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/');
 }
 
 export async function deleteRoute(id: string) {
