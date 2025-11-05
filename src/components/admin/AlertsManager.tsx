@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { saveAlert, deleteAlert } from "@/lib/actions";
 
 const alertSchema = z.object({
   id: z.string().optional(),
@@ -32,7 +33,7 @@ const alertSchema = z.object({
 
 type AlertFormValues = z.infer<typeof alertSchema>;
 
-const AlertForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) => {
+const AlertForm = ({ onSave, onOpenChange }: { onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
   const form = useForm<AlertFormValues>({
     resolver: zodResolver(alertSchema),
@@ -45,11 +46,15 @@ const AlertForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) 
   const { formState } = form;
 
   async function onSubmit(data: AlertFormValues) {
-    // This is a placeholder for the actual save action
-    console.log(data);
-    toast({ title: "Alerta guardada", description: "La alerta se ha guardado correctamente." });
-    onOpenChange(false);
-    form.reset();
+    try {
+      await saveAlert(data);
+      toast({ title: "Alerta guardada", description: "La alerta se ha guardado correctamente." });
+      onSave();
+      onOpenChange(false);
+      form.reset();
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la alerta." });
+    }
   }
 
   return (
@@ -67,7 +72,7 @@ const AlertForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) 
   );
 };
 
-export default function AlertsManager({ alerts }: { alerts: Alert[] }) {
+export default function AlertsManager({ alerts, onDataChange }: { alerts: Alert[], onDataChange: () => void }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -76,9 +81,13 @@ export default function AlertsManager({ alerts }: { alerts: Alert[] }) {
   };
 
   const handleDelete = async (id: string) => {
-    // This is a placeholder for the actual delete action
-    console.log(`Deleting alert ${id}`);
-    toast({ title: "Alerta eliminada", description: "La alerta se ha eliminado." });
+    try {
+      await deleteAlert(id);
+      toast({ title: "Alerta eliminada", description: "La alerta se ha eliminado." });
+      onDataChange();
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la alerta." });
+    }
   };
 
   return (
@@ -121,7 +130,7 @@ export default function AlertsManager({ alerts }: { alerts: Alert[] }) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Nueva Alerta</DialogTitle></DialogHeader>
-          <AlertForm onOpenChange={setIsDialogOpen} />
+          <AlertForm onSave={onDataChange} onOpenChange={setIsDialogOpen} />
         </DialogContent>
       </Dialog>
     </Card>

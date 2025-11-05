@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Bus, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,18 +10,9 @@ import { ScheduleModal } from "@/components/shared/ScheduleModal";
 import type { Route } from "@/lib/definitions";
 import { Separator } from "../ui/separator";
 import { Skeleton } from "../ui/skeleton";
-import routesData from '@/data/routes.json';
 
-export function RoutesSection() {
-  const [routes, setRoutes] = useState<Route[]>([]);
+export function RoutesSection({ routes }: { routes: Route[] }) {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate loading data
-    setRoutes(routesData as Route[]);
-    setLoading(false);
-  }, []);
 
   const greciaRoutes = useMemo(() => {
     return routes.filter(
@@ -34,27 +26,6 @@ export function RoutesSection() {
     );
   }, [routes]);
   
-  const RouteGridSkeleton = () => (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {[...Array(3)].map((_, i) => (
-        <Card key={i} className="flex flex-col">
-           <div className="relative aspect-[16/10] w-full p-4">
-              <Skeleton className="h-full w-full rounded-md" />
-           </div>
-           <CardContent className="p-4 pt-0">
-             <Skeleton className="h-8 w-3/4 mb-2" />
-             <Skeleton className="h-4 w-1/2 mb-3" />
-             <Separator className="mb-3" />
-             <div className="flex items-center justify-between mt-auto">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-8 w-16" />
-             </div>
-           </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-
   const RouteGrid = ({ routes }: { routes: Route[] }) => {
     if (routes.length === 0) {
       return (
@@ -113,14 +84,14 @@ export function RoutesSection() {
         className="text-left mb-6"
       />
       <Separator className="mb-8" />
-       {loading ? <RouteGridSkeleton /> : <RouteGrid routes={greciaRoutes} />}
+       <RouteGrid routes={greciaRoutes} />
 
       <SectionHeader
         title="Sarchí"
         className="text-left mb-6 mt-16"
       />
       <Separator className="mb-8" />
-      {loading ? <RouteGridSkeleton /> : <RouteGrid routes={sarchiRoutes} />}
+      <RouteGrid routes={sarchiRoutes} />
 
       <ScheduleModal
         route={selectedRoute}

@@ -49,9 +49,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+import { saveRoute, deleteRoute } from "@/lib/actions";
 
 const routeSchema = z.object({
   id: z.string().optional(),
@@ -59,14 +57,14 @@ const routeSchema = z.object({
   category: z.enum(["grecia", "sarchi"], { required_error: "La categoría es requerida."}),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
-  imagenHorario: z.any().optional(), // We'll handle validation manually for now
-  imagenTarjeta: z.any().optional(),
+  imagenHorarioUrl: z.string().optional(),
+  imagenTarjetaUrl: z.string().optional(),
   activo: z.boolean(),
 });
 
 type RouteFormValues = z.infer<typeof routeSchema>;
 
-const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOpenChange: (open: boolean) => void }) => {
+const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | null, onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
   const form = useForm<RouteFormValues>({
     resolver: zodResolver(routeSchema),
@@ -76,6 +74,8 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
       category: route?.category || "grecia",
       duracionMin: route?.duracionMin || 0,
       tarifaCRC: route?.tarifaCRC || 0,
+      imagenHorarioUrl: route?.imagenHorarioUrl || "",
+      imagenTarjetaUrl: route?.imagenTarjetaUrl || "",
       activo: route?.activo ?? true,
     },
   });
@@ -83,10 +83,14 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
   const { formState } = form;
 
   async function onSubmit(data: RouteFormValues) {
-    // This is a placeholder for the actual save action
-    console.log(data);
-    toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
-    onOpenChange(false);
+    try {
+      await saveRoute(data);
+      toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
+      onSave();
+      onOpenChange(false);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la ruta." });
+    }
   }
 
   return (
@@ -130,32 +134,26 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
         </div>
          <FormField
           control={form.control}
-          name="imagenHorario"
+          name="imagenHorarioUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Imagen del Horario</FormLabel>
+              <FormLabel>URL de Imagen del Horario</FormLabel>
               <FormControl>
-                <Input type="file" onChange={(e) => field.onChange(e.target.files)} />
+                <Input {...field} placeholder="https://example.com/horario.jpg"/>
               </FormControl>
-              <FormDescription>
-                {route?.imagenHorarioUrl && !field.value?.[0] ? `Actual: ${route.imagenHorarioUrl}` : "Sube una nueva imagen para el horario."}
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
-          name="imagenTarjeta"
+          name="imagenTarjetaUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Imagen de la Tarjeta</FormLabel>
+              <FormLabel>URL de Imagen de la Tarjeta</FormLabel>
               <FormControl>
-                <Input type="file" onChange={(e) => field.onChange(e.target.files)} />
+                <Input {...field} placeholder="https://example.com/tarjeta.jpg" />
               </FormControl>
-              <FormDescription>
-                 {route?.imagenTarjetaUrl && !field.value?.[0] ? `Actual: ${route.imagenTarjetaUrl}` : "Sube una nueva imagen para la tarjeta de la ruta."}
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -177,7 +175,7 @@ const RouteForm = ({ route, onOpenChange }: { route: Partial<Route> | null, onOp
   );
 };
 
-export default function RoutesManager({ routes }: { routes: Route[] }) {
+export default function RoutesManager({ routes, onDataChange }: { routes: Route[], onDataChange: () => void }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Partial<Route> | null>(null);
   const { toast } = useToast();
@@ -193,9 +191,13 @@ export default function RoutesManager({ routes }: { routes: Route[] }) {
   };
 
   const handleDelete = async (id: string) => {
-    // This is a placeholder for the actual delete action
-    console.log(`Deleting route ${id}`);
-    toast({ title: "Ruta eliminada", description: "La ruta se ha eliminado correctamente." });
+    try {
+      await deleteRoute(id);
+      toast({ title: "Ruta eliminada", description: "La ruta se ha eliminado correctamente." });
+      onDataChange();
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la ruta." });
+    }
   };
 
   return (
@@ -264,7 +266,7 @@ export default function RoutesManager({ routes }: { routes: Route[] }) {
           <DialogHeader>
             <DialogTitle>{selectedRoute?.id ? 'Editar Ruta' : 'Nueva Ruta'}</DialogTitle>
           </DialogHeader>
-          <RouteForm route={selectedRoute} onOpenChange={setIsDialogOpen} />
+          <RouteForm route={selectedRoute} onSave={onDataChange} onOpenChange={setIsDialogOpen} />
         </DialogContent>
       </Dialog>
     </Card>

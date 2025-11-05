@@ -1,39 +1,19 @@
 
-"use client";
-
-import { useEffect, useState } from 'react';
 import { Info, BellRing } from 'lucide-react';
 import { Alert as AlertUI, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import type { Alert } from "@/lib/definitions";
 import { Card } from '../ui/card';
-import { Skeleton } from '../ui/skeleton';
-import alertsData from '@/data/alerts.json';
+import { getAlerts } from '@/lib/data-service';
 
-export function AlertsSection() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadAlerts() {
-      setLoading(true);
-      setAlerts(alertsData as Alert[]);
-      setLoading(false);
-    }
-    loadAlerts();
-  }, []);
+export async function AlertsSection() {
+  const alerts = await getAlerts();
 
   return (
     <Section id="alertas">
       <SectionHeader title="Alertas y Anuncios" />
       
-      {loading ? (
-        <Card className="max-w-2xl mx-auto p-6 space-y-4">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-5/6" />
-          <Skeleton className="h-6 w-full" />
-        </Card>
-      ) : alerts.length > 0 ? (
+      {alerts.length > 0 ? (
         <Card className="max-w-2xl mx-auto">
             <ul className="p-6 space-y-4">
             {alerts.map(alert => (

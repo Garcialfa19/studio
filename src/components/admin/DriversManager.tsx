@@ -47,6 +47,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { saveDriver, deleteDriver } from "@/lib/actions";
 
 const driverSchema = z.object({
   id: z.string().optional(),
@@ -59,7 +60,7 @@ const driverSchema = z.object({
 
 type DriverFormValues = z.infer<typeof driverSchema>;
 
-const DriverForm = ({ driver, routes, onOpenChange }: { driver: Partial<Driver> | null, routes: Route[], onOpenChange: (open: boolean) => void }) => {
+const DriverForm = ({ driver, routes, onSave, onOpenChange }: { driver: Partial<Driver> | null, routes: Route[], onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
   const form = useForm<DriverFormValues>({
     resolver: zodResolver(driverSchema),
@@ -76,10 +77,14 @@ const DriverForm = ({ driver, routes, onOpenChange }: { driver: Partial<Driver> 
   const { formState } = form;
 
   async function onSubmit(data: DriverFormValues) {
-    // This is a placeholder for the actual save action
-    console.log(data);
-    toast({ title: "Chofer guardado", description: "La información del chofer se ha guardado." });
-    onOpenChange(false);
+    try {
+      await saveDriver(data);
+      toast({ title: "Chofer guardado", description: "La información del chofer se ha guardado." });
+      onSave();
+      onOpenChange(false);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la información del chofer." });
+    }
   }
 
   return (
@@ -144,7 +149,7 @@ const DriverForm = ({ driver, routes, onOpenChange }: { driver: Partial<Driver> 
   );
 };
 
-export default function DriversManager({ drivers, routes }: { drivers: Driver[], routes: Route[] }) {
+export default function DriversManager({ drivers, routes, onDataChange }: { drivers: Driver[], routes: Route[], onDataChange: () => void }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Partial<Driver> | null>(null);
   const { toast } = useToast();
@@ -160,9 +165,13 @@ export default function DriversManager({ drivers, routes }: { drivers: Driver[],
   };
 
   const handleDelete = async (id: string) => {
-    // This is a placeholder for the actual delete action
-    console.log(`Deleting driver ${id}`);
-    toast({ title: "Chofer eliminado", description: "El chofer se ha eliminado." });
+    try {
+      await deleteDriver(id);
+      toast({ title: "Chofer eliminado", description: "El chofer se ha eliminado." });
+      onDataChange();
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar el chofer." });
+    }
   };
   
   const getRouteName = (routeId: string | null) => {
@@ -231,7 +240,7 @@ export default function DriversManager({ drivers, routes }: { drivers: Driver[],
           <DialogHeader>
             <DialogTitle>{selectedDriver?.id ? 'Editar Chofer' : 'Nuevo Chofer'}</DialogTitle>
           </DialogHeader>
-          <DriverForm driver={selectedDriver} routes={routes} onOpenChange={setIsDialogOpen} />
+          <DriverForm driver={selectedDriver} routes={routes} onSave={onDataChange} onOpenChange={setIsDialogOpen} />
         </DialogContent>
       </Dialog>
     </Card>

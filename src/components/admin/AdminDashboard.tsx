@@ -5,27 +5,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoutesManager from "@/components/admin/RoutesManager";
 import AlertsManager from "@/components/admin/AlertsManager";
 import DriversManager from "@/components/admin/DriversManager";
-import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
 import type { Route, Alert, Driver } from "@/lib/definitions";
 import { useEffect } from "react";
-import routesData from '@/data/routes.json';
-import alertsData from '@/data/alerts.json';
-import driversData from '@/data/drivers.json';
+import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service";
 
 export default function AdminDashboard() {
-    const [routes, setRoutes] = useState<Route[]>([]);
-    const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [drivers, setDrivers] = useState<Driver[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dataVersion, setDataVersion] = useState(0);
 
-    useEffect(() => {
+  const refreshData = () => {
+    setDataVersion(prev => prev + 1);
+  };
+  
+  useEffect(() => {
+    async function loadData() {
         setLoading(true);
-        setRoutes(routesData as Route[]);
-        setAlerts(alertsData as Alert[]);
-        setDrivers(driversData as Driver[]);
-        setLoading(false);
-    }, []);
+        try {
+            const [routesData, alertsData, driversData] = await Promise.all([
+                getRoutes(),
+                getAlerts(),
+                getDrivers()
+            ]);
+            setRoutes(routesData);
+            setAlerts(alertsData);
+            setDrivers(driversData);
+        } catch (error) {
+            console.error("Failed to load data", error);
+            // Optionally, show a toast message to the user
+        } finally {
+            setLoading(false);
+        }
+    }
+    loadData();
+  }, [dataVersion]);
 
 
   if (loading) {
@@ -47,13 +63,13 @@ export default function AdminDashboard() {
             </TabsList>
         </div>
         <TabsContent value="routes">
-            <RoutesManager routes={routes} />
+            <RoutesManager routes={routes} onDataChange={refreshData} />
         </TabsContent>
         <TabsContent value="alerts">
-            <AlertsManager alerts={alerts} />
+            <AlertsManager alerts={alerts} onDataChange={refreshData} />
         </TabsContent>
         <TabsContent value="drivers">
-            <DriversManager drivers={drivers} routes={routes} />
+            <DriversManager drivers={drivers} routes={routes} onDataChange={refreshData} />
         </TabsContent>
     </Tabs>
   );
