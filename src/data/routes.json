@@ -42,5 +42,16 @@
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus4/600/400",
     "lastUpdated": "2024-05-19T11:00:00Z",
     "especificacion": ""
+  },
+  {
+    "id": "test-route",
+    "nombre": "Test Route",
+    "category": "grecia",
+    "duracionMin": 10,
+    "tarifaCRC": 100,
+    "imagenHorarioUrl": "/uploads/cards/index-07.jpg",
+    "imagenTarjetaUrl": "/uploads/cards/index-07.jpg",
+    "lastUpdated": "2024-07-29T10:00:00Z",
+    "especificacion": "This is for testing"
   }
 ]
