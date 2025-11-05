@@ -31,7 +31,6 @@ async function saveFileToFirebase(file: File): Promise<string> {
 // --- Route Actions ---
 
 const routeSchema = z.object({
-  id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
   especificacion: z.string().optional().default(''),
   category: z.enum(["grecia", "sarchi"]),
@@ -75,8 +74,6 @@ export async function saveRoute(formData: FormData) {
         imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
         lastUpdated: now,
     };
-    delete (routeData as any).id;
-
 
     if (routeId && routeId.trim() !== '') {
         // Update existing route
@@ -229,11 +226,6 @@ export async function migrateDataToFirestore() {
 
     await batch.commit();
     
-    // Optional: Clear JSON files after successful migration
-    // await fs.writeFile(dataFilePath('routes.json'), '[]', 'utf-8');
-    // await fs.writeFile(dataFilePath('alerts.json'), '[]', 'utf-8');
-    // await fs.writeFile(dataFilePath('drivers.json'), '[]', 'utf-8');
-
     revalidatePath('/admin/dashboard');
     revalidatePath('/');
 

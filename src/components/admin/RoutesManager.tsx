@@ -50,12 +50,6 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    if(route?.id) {
-        formData.append('id', route.id);
-    }
-    // Pass current URLs to the action so it knows if it needs to keep them
-    formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
-    formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
     
     try {
       await saveRoute(formData);
@@ -72,6 +66,10 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
 
   return (
       <form onSubmit={handleSubmit} className="space-y-4">
+        {route?.id && <input type="hidden" name="id" value={route.id} />}
+        <input type="hidden" name="currentImagenTarjetaUrl" value={route?.imagenTarjetaUrl || ''} />
+        <input type="hidden" name="currentImagenHorarioUrl" value={route?.imagenHorarioUrl || ''} />
+
         <div className="space-y-2">
             <Label htmlFor="nombre">Nombre de la Ruta</Label>
             <Input id="nombre" name="nombre" defaultValue={route?.nombre || ""} required />
