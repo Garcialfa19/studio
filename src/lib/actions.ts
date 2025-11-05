@@ -2,22 +2,16 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { promises as fs } from 'fs';
-import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
-import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
+import { initializeFirebaseAdmin } from '@/firebase/admin';
 import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 
-// --- Data Access Helpers ---
 const createSlug = (name: string) => {
   return name
     .toLowerCase()
-    .replace(/ /g, '-')
+    .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '');
 };
-
-
-// --- Route Actions ---
 
 const routeSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido."),
@@ -27,46 +21,79 @@ const routeSchema = z.object({
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
 });
 
+async function uploadFileToStorage(file: File): Promise<string> {
+    const admin = initializeFirebaseAdmin();
+    const bucket = admin.storage().bucket();
+    
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const storageFile = bucket.file(`route-images/${filename}`);
+
+    await storageFile.save(buffer, {
+        metadata: {
+            contentType: file.type,
+        },
+    });
+
+    return storageFile.publicUrl();
+}
+
 export async function saveRoute(formData: FormData) {
-    const { firestore } = initializeServerFirebase();
-    const rawData = Object.fromEntries(formData.entries());
-    
-    const validatedFields = routeSchema.safeParse(rawData);
+  const admin = initializeFirebaseAdmin();
+  const firestore = admin.firestore();
 
-    if (!validatedFields.success) {
-        console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
-        throw new Error('Datos de ruta inválidos.');
-    }
-    
-    const { data } = validatedFields;
-    const now = new Date().toISOString();
-    
-    const routeId = createSlug(data.nombre);
-    
-    const routeData: Omit<Route, 'id'> = {
-        nombre: data.nombre,
-        especificacion: data.especificacion,
-        category: data.category,
-        duracionMin: data.duracionMin,
-        tarifaCRC: data.tarifaCRC,
-        imagenTarjetaUrl: "/uploads/cards/index-07.jpg",
-        imagenHorarioUrl: "/uploads/cards/index-07.jpg",
-        lastUpdated: now,
-    };
-    
-    const routeRef = doc(firestore, 'routes', routeId);
-    await setDoc(routeRef, routeData, { merge: true });
+  const id = formData.get('id') as string | null;
+  const rawData = Object.fromEntries(formData.entries());
 
+  const validatedFields = routeSchema.safeParse(rawData);
 
-    revalidatePath('/admin/dashboard');
-    revalidatePath('/');
-    revalidatePath('/api/routes');
+  if (!validatedFields.success) {
+    console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
+    throw new Error('Datos de ruta inválidos.');
+  }
+
+  const data = validatedFields.data;
+  const routeId = id || createSlug(data.nombre);
+  const now = new Date().toISOString();
+
+  let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
+  let imagenHorarioUrl = formData.get('currentImagenHorarioUrl') as string || '';
+
+  const imagenTarjetaFile = formData.get('imagenTarjetaUrl') as File;
+  const imagenHorarioFile = formData.get('imagenHorarioUrl') as File;
+
+  if (imagenTarjetaFile && imagenTarjetaFile.size > 0) {
+      imagenTarjetaUrl = await uploadFileToStorage(imagenTarjetaFile);
+  }
+
+  if (imagenHorarioFile && imagenHorarioFile.size > 0) {
+      imagenHorarioUrl = await uploadFileToStorage(imagenHorarioFile);
+  }
+  
+  const routeData: Omit<Route, 'id'> = {
+    nombre: data.nombre,
+    especificacion: data.especificacion,
+    category: data.category,
+    duracionMin: data.duracionMin,
+    tarifaCRC: data.tarifaCRC,
+    imagenTarjetaUrl: imagenTarjetaUrl,
+    imagenHorarioUrl: imagenHorarioUrl,
+    lastUpdated: now,
+  };
+
+  const routeRef = firestore.collection('routes').doc(routeId);
+  await routeRef.set(routeData, { merge: true });
+
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/');
+  revalidatePath('/api/routes');
 }
 
 
 export async function deleteRoute(id: string) {
-  const { firestore } = initializeServerFirebase();
-  await deleteDoc(doc(firestore, 'routes', id));
+  const admin = initializeFirebaseAdmin();
+  const firestore = admin.firestore();
+  await firestore.collection('routes').doc(id).delete();
   
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
@@ -81,7 +108,7 @@ const alertSchema = z.object({
 });
 
 export async function saveAlert(alertData: Partial<Alert>) {
-    const { firestore } = initializeServerFirebase();
+    const { firestore } = initializeFirebaseAdmin();
     const validatedAlert = alertSchema.parse(alertData);
     const now = new Date().toISOString();
 
@@ -91,10 +118,10 @@ export async function saveAlert(alertData: Partial<Alert>) {
     };
 
     if (validatedAlert.id) {
-        const alertRef = doc(firestore, 'alerts', validatedAlert.id);
-        await updateDoc(alertRef, dataToSave);
+        const alertRef = firestore.collection('alerts').doc(validatedAlert.id);
+        await alertRef.update(dataToSave);
     } else {
-        await addDoc(collection(firestore, 'alerts'), dataToSave);
+        await firestore.collection('alerts').add(dataToSave);
     }
 
     revalidatePath('/admin/dashboard');
@@ -103,8 +130,8 @@ export async function saveAlert(alertData: Partial<Alert>) {
 }
 
 export async function deleteAlert(id: string) {
-    const { firestore } = initializeServerFirebase();
-    await deleteDoc(doc(firestore, 'alerts', id));
+    const { firestore } = initializeFirebaseAdmin();
+    await firestore.collection('alerts').doc(id).delete();
 
     revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
@@ -123,7 +150,7 @@ const driverSchema = z.object({
 });
 
 export async function saveDriver(driverData: Partial<Driver>) {
-    const { firestore } = initializeServerFirebase();
+    const { firestore } = initializeFirebaseAdmin();
     const validatedDriver = driverSchema.parse(driverData);
     const now = new Date().toISOString();
 
@@ -135,10 +162,10 @@ export async function saveDriver(driverData: Partial<Driver>) {
 
 
     if (validatedDriver.id) {
-        const driverRef = doc(firestore, 'drivers', validatedDriver.id);
-        await updateDoc(driverRef, dataToSave);
+        const driverRef = firestore.collection('drivers').doc(validatedDriver.id);
+        await driverRef.update(dataToSave);
     } else {
-        await addDoc(collection(firestore, 'drivers'), dataToSave);
+        await firestore.collection('drivers').add(dataToSave);
     }
     
     revalidatePath('/admin/dashboard');
@@ -146,8 +173,8 @@ export async function saveDriver(driverData: Partial<Driver>) {
 }
 
 export async function deleteDriver(id: string) {
-    const { firestore } = initializeServerFirebase();
-    await deleteDoc(doc(firestore, 'drivers', id));
+    const { firestore } = initializeFirebaseAdmin();
+    await firestore.collection('drivers').doc(id).delete();
 
     revalidatePath('/admin/dashboard');
     revalidatePath('/api/drivers');
@@ -156,9 +183,9 @@ export async function deleteDriver(id: string) {
 
 // --- Data Migration Action ---
 async function readJsonData(filename: string) {
-  const filePath = path.join(process.cwd(), 'src', 'data', filename);
+  const filePath = require('path').join(process.cwd(), 'src', 'data', filename);
   try {
-    const jsonData = await fs.readFile(filePath, 'utf-8');
+    const jsonData = await require('fs').promises.readFile(filePath, 'utf-8');
     return JSON.parse(jsonData);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
@@ -167,7 +194,7 @@ async function readJsonData(filename: string) {
 }
 
 export async function migrateDataToFirestore() {
-  const { firestore } = initializeServerFirebase();
+  const { firestore } = initializeFirebaseAdmin();
 
   try {
     const routes = await readJsonData('routes.json');
@@ -178,24 +205,24 @@ export async function migrateDataToFirestore() {
       return { success: true, message: 'No data found in JSON files to migrate.' };
     }
 
-    const batch = writeBatch(firestore);
+    const batch = firestore.batch();
 
     routes.forEach((item: Route) => {
       const docId = createSlug(item.nombre);
       const { id, ...data } = item;
-      const docRef = doc(firestore, 'routes', docId);
+      const docRef = firestore.collection('routes').doc(docId);
       batch.set(docRef, data);
     });
 
     alerts.forEach((item: Alert) => {
       const { id, ...data } = item;
-      const docRef = doc(firestore, 'alerts', id);
+      const docRef = firestore.collection('alerts').doc(id);
       batch.set(docRef, data);
     });
 
     drivers.forEach((item: Driver) => {
       const { id, ...data } = item;
-      const docRef = doc(firestore, 'drivers', id);
+      const docRef = firestore.collection('drivers').doc(id);
       batch.set(docRef, data);
     });
 

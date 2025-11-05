@@ -1,0 +1,14 @@
+diff --git a/node_modules/firebase-admin/lib/app/firebase-namespace.js b/node_modules/firebase-admin/lib/app/firebase-namespace.js
+index 99a365261546e4925b5a265b6eb93a8d9a473a21..57e5ddf53097d76f0c4314c1920894564c767a4e 100644
+--- a/node_modules/firebase-admin/lib/app/firebase-namespace.js
++++ b/node_modules/firebase-admin/lib/app/firebase-namespace.js
+@@ -17,6 +17,9 @@
+  * limitations under the License.
+  */
+ Object.defineProperty(exports, "__esModule", { value: true });
++if (typeof global === 'object' && typeof global.window === 'undefined') {
++    global.window = {Promise: Promise};
++}
+ var app_1 = require("@firebase/app");
+ var deep_copy_1 = require("@firebase/util/dist/src/deepCopy");
+ var deep_extend_1 = require("@firebase/util/dist/src/deepExtend");
