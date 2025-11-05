@@ -53,5 +53,16 @@
     "imagenTarjetaUrl": "/uploads/cards/index-07.jpg",
     "lastUpdated": "2024-07-29T10:00:00Z",
     "especificacion": "This is for testing"
+  },
+  {
+    "id": "this-is-a-new",
+    "nombre": "this is a new",
+    "especificacion": "test",
+    "category": "grecia",
+    "duracionMin": 12,
+    "tarifaCRC": 12,
+    "imagenTarjetaUrl": "",
+    "imagenHorarioUrl": "",
+    "lastUpdated": "2025-11-05T07:52:06.452Z"
   }
 ]
