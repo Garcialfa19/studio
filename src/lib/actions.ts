@@ -9,25 +9,52 @@ import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
 import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 
+import * as admin from 'firebase-admin';
+
+// --- Firebase Admin Initialization ---
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+  : null;
+
+if (!admin.apps.length) {
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: `${serviceAccount.project_id}.appspot.com`,
+    });
+  } else if (process.env.NODE_ENV === 'development') {
+    // In dev, it might connect via application default credentials
+    console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not set. Using application default credentials for Firebase Admin.");
+    admin.initializeApp();
+  } else {
+    // In prod, rely on App Hosting's auto-configuration
+    admin.initializeApp();
+  }
+}
+
+async function uploadFileToStorage(file: File): Promise<string> {
+    const bucket = admin.storage().bucket();
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uniqueFilename = `route-images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    
+    const storageFile = bucket.file(uniqueFilename);
+
+    await storageFile.save(fileBuffer, {
+        metadata: {
+            contentType: file.type,
+        },
+    });
+
+    // Make the file publicly accessible
+    await storageFile.makePublic();
+
+    // Return the public URL
+    return storageFile.publicUrl();
+}
+
 // --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
 
-
-async function saveFileToLocalServer(file: File): Promise<string> {
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    
-    // Ensure the upload directory exists
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const filePath = path.join(uploadDir, uniqueFilename);
-    await fs.writeFile(filePath, fileBuffer);
-    
-    // Return the public path to be stored in the database
-    return `/uploads/${uniqueFilename}`;
-}
 
 const createSlug = (name: string) => {
   return name
@@ -62,20 +89,19 @@ export async function saveRoute(formData: FormData) {
     const { data } = validatedFields;
     const now = new Date().toISOString();
     
-    // Use the slug from the name as the ID
-    const routeId = createSlug(data.nombre);
+    const routeId = rawData.id ? String(rawData.id) : createSlug(data.nombre);
     
     let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
     let imagenHorarioUrl = formData.get('currentImagenHorarioUrl') as string || '';
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
-        imagenTarjetaUrl = await saveFileToLocalServer(cardImageFile);
+        imagenTarjetaUrl = await uploadFileToStorage(cardImageFile);
     }
 
     const scheduleImageFile = formData.get('imagenHorarioUrl') as File | null;
     if (scheduleImageFile && scheduleImageFile.size > 0) {
-        imagenHorarioUrl = await saveFileToLocalServer(scheduleImageFile);
+        imagenHorarioUrl = await uploadFileToStorage(scheduleImageFile);
     }
     
     const routeData: Omit<Route, 'id'> = {
@@ -90,7 +116,7 @@ export async function saveRoute(formData: FormData) {
     };
     
     const routeRef = doc(firestore, 'routes', routeId);
-    await setDoc(routeRef, routeData);
+    await setDoc(routeRef, routeData, { merge: true });
 
 
     revalidatePath('/admin/dashboard');
