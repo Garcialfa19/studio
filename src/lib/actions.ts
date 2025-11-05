@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -69,8 +70,8 @@ export async function saveRoute(formData: FormData) {
     const routes = await readData<Route>('routes.json');
     const now = new Date().toISOString();
 
-    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string;
-    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string;
+    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string || 'https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen';
+    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string || 'https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario';
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
@@ -90,8 +91,8 @@ export async function saveRoute(formData: FormData) {
                 ...routes[index], 
                 ...data, 
                 especificacion: data.especificacion || '',
-                imagenTarjetaUrl: imagenTarjetaUrl || routes[index].imagenTarjetaUrl,
-                imagenHorarioUrl: imagenHorarioUrl || routes[index].imagenHorarioUrl,
+                imagenTarjetaUrl: imagenTarjetaUrl,
+                imagenHorarioUrl: imagenHorarioUrl,
                 lastUpdated: now 
             };
         }
@@ -101,8 +102,8 @@ export async function saveRoute(formData: FormData) {
             id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
             ...data,
             especificacion: data.especificacion || '',
-            imagenTarjetaUrl: imagenTarjetaUrl || 'https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen',
-            imagenHorarioUrl: imagenHorarioUrl || 'https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario',
+            imagenTarjetaUrl: imagenTarjetaUrl,
+            imagenHorarioUrl: imagenHorarioUrl,
             lastUpdated: now,
         };
         routes.push(newRoute);
