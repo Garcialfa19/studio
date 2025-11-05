@@ -3,9 +3,9 @@
  *
  * Core Philosophy:
  * This ruleset implements a public read-only model for general users,
- * while allowing any authenticated user OR server-side process to perform write operations.
+ * while allowing any authenticated user to perform write operations.
  * This is suitable for an admin-managed application where all logged-in
- * users and server actions are considered administrators.
+ * users are considered administrators.
  *
  * Data Structure:
  * - /routes/{routeId}: Stores route information.
@@ -14,43 +14,36 @@
  *
  * Key Security Decisions:
  * - Public read access is granted for all collections.
- * - Write operations (create, update, delete) are restricted to authenticated users (from the client)
- *   or server-side processes (which have no user auth).
- *
- * Denormalization for Authorization: N/A (Authorization is based on auth status, not data roles).
- * Structural Segregation: Routes, alerts, and drivers are in separate collections, each with its own access policy.
+ * - Write operations (create, update, delete) are restricted to authenticated users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
-     * or server processes (which have no auth context).
+     * @description Allows public read access. Writes are allowed for any authenticated user.
      * @path /routes/{routeId}
      */
     match /routes/{routeId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if request.auth != null;
     }
 
     /**
-     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
-     * or server processes (which have no auth context).
+     * @description Allows public read access. Writes are allowed for any authenticated user.
      * @path /alerts/{alertId}
      */
     match /alerts/{alertId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if request.auth != null;
     }
 
      /**
-     * @description Allows public read access. Writes are allowed for authenticated users (client-side)
-     * or server processes (which have no auth context).
+     * @description Allows public read access. Writes are allowed for any authenticated user.
      * @path /drivers/{driverId}
      */
     match /drivers/{driverId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if request.auth != null;
     }
   }
