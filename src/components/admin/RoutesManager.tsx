@@ -32,11 +32,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Edit, Trash2, ExternalLink, UploadCloud } from "lucide-react";
+import { PlusCircle, Edit, Trash2, ExternalLink } from "lucide-react";
 import type { Route } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -55,12 +53,12 @@ import { saveRoute, deleteRoute } from "@/lib/actions";
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
+  especificacion: z.string().optional(),
   category: z.enum(["grecia", "sarchi"], { required_error: "La categoría es requerida."}),
   duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
   imagenTarjetaUrl: z.any().optional(),
   imagenHorarioUrl: z.any().optional(),
-  activo: z.boolean(),
 });
 
 type RouteFormValues = z.infer<typeof routeSchema>;
@@ -72,10 +70,10 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
     defaultValues: {
       id: route?.id || "",
       nombre: route?.nombre || "",
+      especificacion: route?.especificacion || "",
       category: route?.category || "grecia",
       duracionMin: route?.duracionMin || 0,
       tarifaCRC: route?.tarifaCRC || 0,
-      activo: route?.activo ?? true,
     },
   });
   const { formState, handleSubmit, control } = form;
@@ -119,6 +117,14 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
           <FormItem>
             <FormLabel>Nombre de la Ruta</FormLabel>
             <FormControl><Input {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={control} name="especificacion" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Especificación (Opcional)</FormLabel>
+            <FormControl><Input {...field} placeholder="Ej: Por Churuca" /></FormControl>
+            <FormDescription>Un detalle corto sobre la ruta.</FormDescription>
             <FormMessage />
           </FormItem>
         )} />
@@ -181,14 +187,6 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
           </FormItem>
         </div>
 
-        <FormField control={control} name="activo" render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-0.5">
-              <FormLabel>Activa</FormLabel>
-            </div>
-            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-          </FormItem>
-        )} />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancelar</Button></DialogClose>
           <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Guardar'}</Button>
@@ -240,7 +238,6 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
               <TableHead>Categoría</TableHead>
               <TableHead>Duración</TableHead>
               <TableHead>Tarifa</TableHead>
-              <TableHead>Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -251,9 +248,6 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
                 <TableCell className="capitalize">{route.category}</TableCell>
                 <TableCell>{route.duracionMin} min</TableCell>
                 <TableCell>₡{route.tarifaCRC}</TableCell>
-                <TableCell>
-                  <Badge variant={route.activo ? "default" : "outline"} className={route.activo ? 'bg-green-500' : ''}>{route.activo ? 'Activa' : 'Inactiva'}</Badge>
-                </TableCell>
                 <TableCell>
                   <div className="flex justify-end items-center">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(route)}><Edit className="h-4 w-4" /></Button>

@@ -14,17 +14,22 @@ import { Skeleton } from "../ui/skeleton";
 export function RoutesSection({ routes }: { routes: Route[] }) {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
 
-  const greciaRoutes = useMemo(() => {
-    return routes.filter(
-      (route) => route.activo && route.category === 'grecia'
-    );
+  const activeRoutes = useMemo(() => {
+    return routes.filter(route => (route as any).activo !== false);
   }, [routes]);
+
+
+  const greciaRoutes = useMemo(() => {
+    return activeRoutes.filter(
+      (route) => route.category === 'grecia'
+    );
+  }, [activeRoutes]);
   
   const sarchiRoutes = useMemo(() => {
-    return routes.filter(
-      (route) => route.activo && route.category === 'sarchi'
+    return activeRoutes.filter(
+      (route) => route.category === 'sarchi'
     );
-  }, [routes]);
+  }, [activeRoutes]);
   
   const RouteGrid = ({ routes }: { routes: Route[] }) => {
     if (routes.length === 0) {
@@ -59,7 +64,9 @@ export function RoutesSection({ routes }: { routes: Route[] }) {
               </div>
               <CardContent className="p-4 pt-0 flex flex-col flex-grow">
                 <h3 className="font-headline text-2xl font-bold">{route.nombre}</h3>
-                <p className="text-muted-foreground mb-3">Por Churuca</p>
+                {route.especificacion && (
+                  <p className="text-muted-foreground mb-3">{route.especificacion}</p>
+                )}
                 <Separator className="mb-3" />
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-2 text-muted-foreground">

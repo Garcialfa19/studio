@@ -46,10 +46,10 @@ async function saveFile(file: File, subdir: string): Promise<string> {
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
+  especificacion: z.string().optional(),
   category: z.enum(["grecia", "sarchi"]),
   duracionMin: z.coerce.number(),
   tarifaCRC: z.coerce.number(),
-  activo: z.boolean(),
 });
 
 export async function saveRoute(formData: FormData) {
@@ -58,7 +58,6 @@ export async function saveRoute(formData: FormData) {
         ...rawData,
         duracionMin: Number(rawData.duracionMin),
         tarifaCRC: Number(rawData.tarifaCRC),
-        activo: rawData.activo === 'on'
     });
 
     if (!validatedFields.success) {
@@ -70,8 +69,8 @@ export async function saveRoute(formData: FormData) {
     const routes = await readData<Route>('routes.json');
     const now = new Date().toISOString();
 
-    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string || '';
-    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string || '';
+    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string;
+    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string;
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
@@ -90,8 +89,9 @@ export async function saveRoute(formData: FormData) {
             routes[index] = { 
                 ...routes[index], 
                 ...data, 
-                imagenTarjetaUrl,
-                imagenHorarioUrl,
+                especificacion: data.especificacion || '',
+                imagenTarjetaUrl: imagenTarjetaUrl || routes[index].imagenTarjetaUrl,
+                imagenHorarioUrl: imagenHorarioUrl || routes[index].imagenHorarioUrl,
                 lastUpdated: now 
             };
         }
@@ -100,6 +100,7 @@ export async function saveRoute(formData: FormData) {
         const newRoute: Route = {
             id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
             ...data,
+            especificacion: data.especificacion || '',
             imagenTarjetaUrl: imagenTarjetaUrl || 'https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen',
             imagenHorarioUrl: imagenHorarioUrl || 'https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario',
             lastUpdated: now,
@@ -111,6 +112,7 @@ export async function saveRoute(formData: FormData) {
     revalidatePath('/admin/dashboard');
     revalidatePath('/');
 }
+
 
 export async function deleteRoute(id: string) {
   let routes = await readData<Route>('routes.json');
