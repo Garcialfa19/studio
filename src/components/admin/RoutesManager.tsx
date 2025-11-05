@@ -54,6 +54,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
     if(route?.id) {
         formData.append('id', route.id);
     }
+    // Pass current URLs to the action so it knows if it needs to keep them
     formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
     formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
     
@@ -109,7 +110,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
                       <Image src={route.imagenTarjetaUrl} alt="Vista previa de tarjeta" layout="fill" objectFit="contain" className="rounded-md border" />
                   </div>
               )}
-              <Input id="imagenTarjetaUrl" name="imagenTarjetaUrl" type="file" />
+              <Input id="imagenTarjetaUrl" name="imagenTarjetaUrl" type="file" accept="image/*" />
               <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
             </div>
             <div className="space-y-2">
@@ -119,7 +120,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
                       <Image src={route.imagenHorarioUrl} alt="Vista previa de horario" layout="fill" objectFit="contain" className="rounded-md border" />
                   </div>
               )}
-              <Input id="imagenHorarioUrl" name="imagenHorarioUrl" type="file" />
+              <Input id="imagenHorarioUrl" name="imagenHorarioUrl" type="file" accept="image/*" />
               <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
             </div>
         </div>

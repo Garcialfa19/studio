@@ -1,50 +1,27 @@
-/**
- * @file Firebase Security Rules for Firestore.
- *
- * Core Philosophy:
- * This ruleset implements a public read-only model for general users,
- * while allowing any authenticated user to perform write operations.
- * This is suitable for an admin-managed application where all logged-in
- * users are considered administrators.
- *
- * Data Structure:
- * - /routes/{routeId}: Stores route information.
- * - /alerts/{alertId}: Stores alert messages.
- * - /drivers/{driverId}: Stores driver information.
- *
- * Key Security Decisions:
- * - Public read access is granted for all collections.
- * - Write operations (create, update, delete) are restricted to authenticated users.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Allows public read access. Writes are allowed for any authenticated user.
-     * @path /routes/{routeId}
-     */
+    // Default deny all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow public read access to routes, alerts, and drivers
     match /routes/{routeId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
 
-    /**
-     * @description Allows public read access. Writes are allowed for any authenticated user.
-     * @path /alerts/{alertId}
-     */
     match /alerts/{alertId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
 
-     /**
-     * @description Allows public read access. Writes are allowed for any authenticated user.
-     * @path /drivers/{driverId}
-     */
     match /drivers/{driverId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
   }
 }
