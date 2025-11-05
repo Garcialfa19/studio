@@ -7,24 +7,26 @@ import fs from 'fs/promises';
 import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 
 // --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
 
-async function saveFileToFirebase(file: File): Promise<string> {
-    const { app } = initializeServerFirebase();
-    const storage = getStorage(app);
 
+async function saveFileToLocalServer(file: File): Promise<string> {
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const storageRef = ref(storage, `uploads/${uniqueFilename}`);
-
-    await uploadBytes(storageRef, fileBuffer, { contentType: file.type });
-    const downloadUrl = await getDownloadURL(storageRef);
     
-    return downloadUrl;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    
+    // Ensure the upload directory exists
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const filePath = path.join(uploadDir, uniqueFilename);
+    await fs.writeFile(filePath, fileBuffer);
+    
+    // Return the public path to be stored in the database
+    return `/uploads/${uniqueFilename}`;
 }
 
 
@@ -58,12 +60,12 @@ export async function saveRoute(formData: FormData) {
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
-        imagenTarjetaUrl = await saveFileToFirebase(cardImageFile);
+        imagenTarjetaUrl = await saveFileToLocalServer(cardImageFile);
     }
 
     const scheduleImageFile = formData.get('imagenHorarioUrl') as File | null;
     if (scheduleImageFile && scheduleImageFile.size > 0) {
-        imagenHorarioUrl = await saveFileToFirebase(scheduleImageFile);
+        imagenHorarioUrl = await saveFileToLocalServer(scheduleImageFile);
     }
     
     const routeId = formData.get('id') as string;
@@ -198,7 +200,7 @@ export async function migrateDataToFirestore() {
   try {
     const routes = await readJsonData('routes.json');
     const alerts = await readJsonData('alerts.json');
-    const drivers = await readJson_data('drivers.json');
+    const drivers = await readJsonData('drivers.json');
     
     if (routes.length === 0 && alerts.length === 0 && drivers.length === 0) {
       return { success: true, message: 'No data found in JSON files to migrate.' };
