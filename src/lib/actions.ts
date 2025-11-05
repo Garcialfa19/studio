@@ -198,7 +198,7 @@ export async function migrateDataToFirestore() {
   try {
     const routes = await readJsonData('routes.json');
     const alerts = await readJsonData('alerts.json');
-    const drivers = await readJsonData('drivers.json');
+    const drivers = await readJson_data('drivers.json');
     
     if (routes.length === 0 && alerts.length === 0 && drivers.length === 0) {
       return { success: true, message: 'No data found in JSON files to migrate.' };
