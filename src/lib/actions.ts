@@ -1,46 +1,31 @@
 "use server";
 
-import { promises as fs } from "fs";
-import path from "path";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { initializeFirebase } from '@/firebase';
 import type { Route, Alert, Driver } from "./definitions";
 
-// --- Data Paths ---
-const routesPath = path.join(process.cwd(), "src", "data", "routes.json");
-const alertsPath = path.join(process.cwd(), "src", "data", "alerts.json");
-const driversPath = path.join(process.cwd(), "src", "data", "drivers.json");
+// --- Initialize Firebase ---
+const { firestore, app } = initializeFirebase();
+const storage = getStorage(app);
 
 // --- Helper Functions ---
-async function readData<T>(filePath: string): Promise<T[]> {
-  try {
-    const data = await fs.readFile(filePath, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
-    throw error;
-  }
-}
-
-async function writeData<T>(filePath: string, data: T[]): Promise<void> {
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
-}
-
 async function saveFile(file: File, subfolder: string): Promise<string> {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', subfolder);
-    await fs.mkdir(uploadDir, { recursive: true });
-
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const uniqueFilename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
-    const filePath = path.join(uploadDir, uniqueFilename);
+    const storageRef = ref(storage, `uploads/${subfolder}/${uniqueFilename}`);
     
-    await fs.writeFile(filePath, fileBuffer);
-
-    return `/uploads/${subfolder}/${uniqueFilename}`;
+    const snapshot = await uploadBytes(storageRef, fileBuffer, {
+      contentType: file.type,
+    });
+    
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
 }
 
-// --- Admin CRUD Actions ---
-
+// --- Route Actions ---
 const routeFormSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(3, "El nombre es requerido."),
@@ -52,11 +37,9 @@ const routeFormSchema = z.object({
   imagenTarjeta: z.instanceof(File).optional(),
 });
 
-
 export async function saveRoute(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
   
-  // Zod can't parse files from FormData directly, so we handle them separately.
   const fileValidation = {
       imagenHorario: rawData.imagenHorario instanceof File ? rawData.imagenHorario : undefined,
       imagenTarjeta: rawData.imagenTarjeta instanceof File ? rawData.imagenTarjeta : undefined,
@@ -70,65 +53,70 @@ export async function saveRoute(formData: FormData) {
   }
 
   try {
-    const routes = await readData<Route>(routesPath);
     const data = validation.data;
     
-    let existingRoute: Route | undefined;
+    const routesCollection = collection(firestore, 'routes');
+    let routeDocRef;
+    let existingData = {};
+
     if (data.id) {
-        existingRoute = routes.find(r => r.id === data.id);
+        routeDocRef = doc(routesCollection, data.id);
+        const routeSnap = await (await import('firebase/firestore')).getDoc(routeDocRef);
+        if(routeSnap.exists()) {
+            existingData = routeSnap.data();
+        }
+    } else {
+        routeDocRef = doc(routesCollection); // Let Firestore generate ID
     }
 
-    let imagenHorarioUrl = existingRoute?.imagenHorarioUrl;
+    let imagenHorarioUrl = (existingData as Route)?.imagenHorarioUrl;
     if (data.imagenHorario) {
         imagenHorarioUrl = await saveFile(data.imagenHorario, 'schedules');
     }
 
-    let imagenTarjetaUrl = existingRoute?.imagenTarjetaUrl;
+    let imagenTarjetaUrl = (existingData as Route)?.imagenTarjetaUrl;
     if (data.imagenTarjeta) {
         imagenTarjetaUrl = await saveFile(data.imagenTarjeta, 'cards');
     }
 
-    const routeData: Omit<Route, 'id'> = {
+    const routeData = {
         nombre: data.nombre,
         category: data.category,
         duracionMin: data.duracionMin,
         tarifaCRC: data.tarifaCRC,
         activo: data.activo,
-        imagenHorarioUrl: imagenHorarioUrl || existingRoute?.imagenHorarioUrl || '',
-        imagenTarjetaUrl: imagenTarjetaUrl || existingRoute?.imagenTarjetaUrl || '',
+        imagenHorarioUrl: imagenHorarioUrl || '',
+        imagenTarjetaUrl: imagenTarjetaUrl || 'https://picsum.photos/seed/bus-default/600/400',
         lastUpdated: new Date().toISOString(),
     };
 
-    if (data.id && existingRoute) { // Update
-        const index = routes.findIndex(r => r.id === data.id);
-        routes[index] = { ...existingRoute, ...routeData };
-    } else { // Create
-        routes.push({
-            ...routeData,
-            id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-        });
-    }
+    await setDoc(routeDocRef, routeData, { merge: true });
 
-    await writeData(routesPath, routes);
     revalidatePath("/");
     revalidatePath("/admin/dashboard");
     return { success: true };
   } catch (error) {
       console.error("Error saving route:", error);
-      return { success: false, error: "No se pudo procesar la solicitud." };
+      const errorMessage = error instanceof Error ? error.message : "No se pudo procesar la solicitud.";
+      return { success: false, error: errorMessage };
   }
 }
 
 export async function deleteRoute(id: string) {
-    let routes = await readData<Route>(routesPath);
-    routes = routes.filter(r => r.id !== id);
-    await writeData(routesPath, routes);
-    revalidatePath("/");
-    revalidatePath("/admin/dashboard");
-    return { success: true };
+    try {
+        const routeDocRef = doc(firestore, 'routes', id);
+        await deleteDoc(routeDocRef);
+        revalidatePath("/");
+        revalidatePath("/admin/dashboard");
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting route:", error);
+        return { success: false, error: "No se pudo eliminar la ruta." };
+    }
 }
 
-// Schema for Alert validation
+
+// --- Alert Actions ---
 const alertSchema = z.object({
   id: z.string().optional(),
   titulo: z.string().min(3, "El título es requerido."),
@@ -142,37 +130,46 @@ export async function saveAlert(formData: FormData) {
     return { success: false, error: validation.error.flatten().fieldErrors };
   }
 
-  const alerts = await readData<Alert>(alertsPath);
-  const data = validation.data;
+  try {
+    const data = validation.data;
+    const alertsCollection = collection(firestore, 'alerts');
+    
+    const alertData = {
+      titulo: data.titulo,
+      lastUpdated: new Date().toISOString(),
+    };
 
-  // Since we removed editing, we only handle creation.
-  const newAlert = {
-    titulo: data.titulo,
-    id: data.titulo.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-    lastUpdated: new Date().toISOString(),
-  };
+    if (data.id) { // This part is for editing, but current UI only adds.
+      await setDoc(doc(alertsCollection, data.id), alertData, { merge: true });
+    } else {
+      await addDoc(alertsCollection, alertData);
+    }
 
-  alerts.push(newAlert);
-  
-  await writeData(alertsPath, alerts);
-  revalidatePath("/");
-  revalidatePath("/alertas");
-  revalidatePath("/admin/dashboard");
-  return { success: true };
-}
-
-
-export async function deleteAlert(id: string) {
-    let alerts = await readData<Alert>(alertsPath);
-    alerts = alerts.filter(a => a.id !== id);
-    await writeData(alertsPath, alerts);
     revalidatePath("/");
     revalidatePath("/alertas");
     revalidatePath("/admin/dashboard");
     return { success: true };
+  } catch(error) {
+    console.error("Error saving alert:", error);
+    return { success: false, error: "No se pudo guardar la alerta." };
+  }
+}
+
+export async function deleteAlert(id: string) {
+    try {
+        await deleteDoc(doc(firestore, 'alerts', id));
+        revalidatePath("/");
+        revalidatePath("/alertas");
+        revalidatePath("/admin/dashboard");
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting alert:", error);
+        return { success: false, error: "No se pudo eliminar la alerta." };
+    }
 }
 
 
+// --- Driver Actions ---
 const driverSchema = z.object({
     id: z.string().optional(),
     nombre: z.string().min(1, "El nombre es requerido."),
@@ -181,12 +178,10 @@ const driverSchema = z.object({
     status: z.string().optional(),
     comment: z.string().optional(),
 });
-  
 
 export async function saveDriver(formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
-    // Handle nullable routeId
     if (rawData.routeId === 'null' || rawData.routeId === '') {
         rawData.routeId = null;
     }
@@ -199,10 +194,10 @@ export async function saveDriver(formData: FormData) {
     }
   
     try {
-      const drivers = await readData<Driver>(driversPath);
       const data = validation.data;
-  
-      const driverData: Omit<Driver, 'id' | 'lastUpdated'> & { lastUpdated: string } = {
+      const driversCollection = collection(firestore, 'drivers');
+      
+      const driverData = {
           nombre: data.nombre,
           busPlate: data.busPlate || '',
           routeId: data.routeId,
@@ -210,20 +205,15 @@ export async function saveDriver(formData: FormData) {
           comment: data.comment || '',
           lastUpdated: new Date().toISOString(),
       };
-  
-      if (data.id) { // Update
-          const index = drivers.findIndex(d => d.id === data.id);
-          if (index > -1) {
-              drivers[index] = { ...drivers[index], ...driverData };
-          }
-      } else { // Create
-          drivers.push({
-              ...driverData,
-              id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-          });
+
+      let docRef;
+      if (data.id) {
+          docRef = doc(driversCollection, data.id);
+          await setDoc(docRef, driverData, { merge: true });
+      } else {
+          docRef = await addDoc(driversCollection, driverData);
       }
   
-      await writeData(driversPath, drivers);
       revalidatePath("/admin/dashboard");
       return { success: true };
     } catch (error) {
@@ -233,9 +223,12 @@ export async function saveDriver(formData: FormData) {
 }
   
 export async function deleteDriver(id: string) {
-    let drivers = await readData<Driver>(driversPath);
-    drivers = drivers.filter(d => d.id !== id);
-    await writeData(driversPath, drivers);
-    revalidatePath("/admin/dashboard");
-    return { success: true };
+    try {
+      await deleteDoc(doc(firestore, 'drivers', id));
+      revalidatePath("/admin/dashboard");
+      return { success: true };
+    } catch(error) {
+      console.error("Error deleting driver:", error);
+      return { success: false, error: "No se pudo eliminar el chofer." };
+    }
 }

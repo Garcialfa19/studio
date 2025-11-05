@@ -25,10 +25,63 @@
                 }
             },
             "required": ["uid", "email"]
+        },
+        "route": {
+            "title": "Route",
+            "description": "A bus route with its details.",
+            "type": "object",
+            "properties": {
+                "nombre": { "type": "string" },
+                "category": { "type": "string", "enum": ["grecia", "sarchi"] },
+                "duracionMin": { "type": "number" },
+                "tarifaCRC": { "type": "number" },
+                "imagenHorarioUrl": { "type": "string", "format": "uri" },
+                "imagenTarjetaUrl": { "type": "string", "format": "uri" },
+                "activo": { "type": "boolean" },
+                "lastUpdated": { "type": "string", "format": "date-time" }
+            },
+            "required": ["nombre", "category", "duracionMin", "tarifaCRC", "activo", "lastUpdated"]
+        },
+        "alert": {
+            "title": "Alert",
+            "description": "An announcement or alert for users.",
+            "type": "object",
+            "properties": {
+                "titulo": { "type": "string" },
+                "lastUpdated": { "type": "string", "format": "date-time" }
+            },
+            "required": ["titulo", "lastUpdated"]
+        },
+        "driver": {
+            "title": "Driver",
+            "description": "A driver and their status.",
+            "type": "object",
+            "properties": {
+                "nombre": { "type": "string" },
+                "busPlate": { "type": "string" },
+                "routeId": { "type": "string" },
+                "status": { "type": "string" },
+                "comment": { "type": "string" },
+                "lastUpdated": { "type": "string", "format": "date-time" }
+            },
+            "required": ["nombre", "lastUpdated"]
         }
     },
     "auth": {
         "providers": ["google.com", "password"]
     },
-    "firestore": {}
+    "firestore": {
+        "/routes/{routeId}": {
+            "schema": { "$ref": "#/entities/route" },
+            "description": "Stores all the bus routes."
+        },
+        "/alerts/{alertId}": {
+            "schema": { "$ref": "#/entities/alert" },
+            "description": "Stores all the alerts for users."
+        },
+        "/drivers/{driverId}": {
+            "schema": { "$ref": "#/entities/driver" },
+            "description": "Stores information about drivers."
+        }
+    }
 }

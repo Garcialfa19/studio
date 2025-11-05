@@ -1,37 +1,35 @@
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getFirestore, collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
 import type { Route, Alert, Driver } from './definitions';
 
-// Since this is a server-side service, we can use fs.
-const routesPath = path.join(process.cwd(), 'src', 'data', 'routes.json');
-const alertsPath = path.join(process.cwd(), 'src', 'data', 'alerts.json');
-const driversPath = path.join(process.cwd(), 'src', 'data', 'drivers.json');
+// Initialize Firebase
+const { firestore } = initializeFirebase();
 
-async function readData<T>(filePath: string): Promise<T[]> {
+async function readData<T>(collectionName: string): Promise<T[]> {
   try {
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(fileContent) as T[];
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-        // If the file doesn't exist, create it with an empty array.
-        await fs.writeFile(filePath, '[]', 'utf8');
-        return [];
+    const dbCollection = collection(firestore, collectionName);
+    const q = query(dbCollection, orderBy("lastUpdated", "desc"));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return [];
     }
-    console.error(`Error reading or parsing file at ${filePath}:`, error);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+  } catch (error) {
+    console.error(`Error reading collection ${collectionName}:`, error);
     return [];
   }
 }
 
 export async function getRoutes(): Promise<Route[]> {
-  return readData<Route>(routesPath);
+  return readData<Route>('routes');
 }
 
 export async function getAlerts(): Promise<Alert[]> {
-  return readData<Alert>(alertsPath);
+  return readData<Alert>('alerts');
 }
 
 export async function getDrivers(): Promise<Driver[]> {
-    return readData<Driver>(driversPath);
+    return readData<Driver>('drivers');
 }
