@@ -2,11 +2,11 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { promises as fs } from 'fs';
+import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
 import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
-
-import { initializeFirebaseAdmin } from '@/firebase/admin';
 
 // --- Data Access Helpers ---
 const createSlug = (name: string) => {
@@ -27,25 +27,6 @@ const routeSchema = z.object({
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
 });
 
-
-async function uploadFileToStorage(file: File): Promise<string> {
-    const { admin } = initializeFirebaseAdmin();
-    const bucket = admin.storage().bucket();
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const uniqueFilename = `route-images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    
-    const storageFile = bucket.file(uniqueFilename);
-
-    await storageFile.save(fileBuffer, {
-        metadata: {
-            contentType: file.type,
-        },
-    });
-
-    await storageFile.makePublic();
-    return storageFile.publicUrl();
-}
-
 export async function saveRoute(formData: FormData) {
     const { firestore } = initializeServerFirebase();
     const rawData = Object.fromEntries(formData.entries());
@@ -60,20 +41,7 @@ export async function saveRoute(formData: FormData) {
     const { data } = validatedFields;
     const now = new Date().toISOString();
     
-    const routeId = rawData.id ? String(rawData.id) : createSlug(data.nombre);
-    
-    let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
-    let imagenHorarioUrl = formData.get('currentImagenHorarioUrl') as string || '';
-
-    const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
-    if (cardImageFile && cardImageFile.size > 0) {
-        imagenTarjetaUrl = await uploadFileToStorage(cardImageFile);
-    }
-
-    const scheduleImageFile = formData.get('imagenHorarioUrl') as File | null;
-    if (scheduleImageFile && scheduleImageFile.size > 0) {
-        imagenHorarioUrl = await uploadFileToStorage(scheduleImageFile);
-    }
+    const routeId = createSlug(data.nombre);
     
     const routeData: Omit<Route, 'id'> = {
         nombre: data.nombre,
@@ -81,8 +49,8 @@ export async function saveRoute(formData: FormData) {
         category: data.category,
         duracionMin: data.duracionMin,
         tarifaCRC: data.tarifaCRC,
-        imagenTarjetaUrl: imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
-        imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
+        imagenTarjetaUrl: "/uploads/cards/index-07.jpg",
+        imagenHorarioUrl: "/uploads/cards/index-07.jpg",
         lastUpdated: now,
     };
     
