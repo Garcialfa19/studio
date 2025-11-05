@@ -2,14 +2,14 @@
 'use server';
 
 import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
 import path from 'path';
-import { revalidatePath } from 'next/cache';
 import type { Route, Alert, Driver } from './definitions';
 
+// --- Data Access Helpers ---
 const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
 
-// Helper function to read data
 async function readData<T>(filename: string): Promise<T[]> {
   try {
     const filePath = dataFilePath(filename);
@@ -17,25 +17,30 @@ async function readData<T>(filename: string): Promise<T[]> {
     return JSON.parse(jsonData);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return [];
+      return []; // Return empty array if file doesn't exist
     }
-    throw error;
+    console.error(`Error reading data from ${filename}:`, error);
+    throw new Error(`Could not read data from ${filename}.`);
   }
 }
 
-// Helper function to write data
 async function writeData<T>(filename: string, data: T[]): Promise<void> {
-  const filePath = dataFilePath(filename);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  try {
+    const filePath = dataFilePath(filename);
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error) {
+    console.error(`Error writing data to ${filename}:`, error);
+    throw new Error(`Could not write data to ${filename}.`);
+  }
 }
 
-// Helper to save uploaded file
 async function saveFile(file: File, subdir: string): Promise<string> {
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', subdir);
     await fs.mkdir(uploadsDir, { recursive: true });
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const uniqueFilename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    // Sanitize and create a unique filename
+    const uniqueFilename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const filePath = path.join(uploadsDir, uniqueFilename);
 
     await fs.writeFile(filePath, fileBuffer);
@@ -43,35 +48,35 @@ async function saveFile(file: File, subdir: string): Promise<string> {
     return `/uploads/${subdir}/${uniqueFilename}`;
 }
 
-// Route Actions
+
+// --- Route Actions ---
+
 const routeSchema = z.object({
   id: z.string().optional(),
   nombre: z.string().min(1, "El nombre es requerido."),
   especificacion: z.string().optional(),
   category: z.enum(["grecia", "sarchi"]),
-  duracionMin: z.coerce.number(),
-  tarifaCRC: z.coerce.number(),
+  duracionMin: z.coerce.number().min(0, "La duración no puede ser negativa."),
+  tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
 });
+
 
 export async function saveRoute(formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = routeSchema.safeParse({
-        ...rawData,
-        duracionMin: Number(rawData.duracionMin),
-        tarifaCRC: Number(rawData.tarifaCRC),
-    });
+
+    const validatedFields = routeSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
         console.error('Validation failed:', validatedFields.error.flatten().fieldErrors);
-        throw new Error('Invalid route data.');
+        throw new Error('Datos de ruta inválidos.');
     }
     
     const { data } = validatedFields;
     const routes = await readData<Route>('routes.json');
     const now = new Date().toISOString();
     
-    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string;
-    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string;
+    let imagenTarjetaUrl = formData.get('currentImagenTarjetaUrl') as string || '';
+    let imagenHorarioUrl = formData.get('currentImagenHorarioUrl') as string || '';
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
@@ -125,7 +130,8 @@ export async function deleteRoute(id: string) {
   revalidatePath('/api/routes');
 }
 
-// Alert Actions
+
+// --- Alert Actions ---
 const alertSchema = z.object({
     id: z.string().optional(),
     titulo: z.string().min(1, "El título es requerido."),
@@ -166,7 +172,7 @@ export async function deleteAlert(id: string) {
 }
 
 
-// Driver Actions
+// --- Driver Actions ---
 const driverSchema = z.object({
     id: z.string().optional(),
     nombre: z.string().min(1, "El nombre es requerido."),

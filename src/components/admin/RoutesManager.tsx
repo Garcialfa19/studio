@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
@@ -55,7 +57,7 @@ const routeSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido."),
   especificacion: z.string().optional(),
   category: z.enum(["grecia", "sarchi"], { required_error: "La categoría es requerida."}),
-  duracionMin: z.coerce.number().min(1, "La duración debe ser positiva."),
+  duracionMin: z.coerce.number().min(0, "La duración no puede ser negativa."),
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
   imagenTarjetaUrl: z.any().optional(),
   imagenHorarioUrl: z.any().optional(),
@@ -76,27 +78,21 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
       tarifaCRC: route?.tarifaCRC || 0,
     },
   });
-  const { formState, handleSubmit, control } = form;
+  const { formState, handleSubmit, control, register } = form;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function onSubmit(data: RouteFormValues) {
-    setIsSubmitting(true);
-    const formData = new FormData();
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     
-    // Append all form data to FormData object
-    Object.entries(data).forEach(([key, value]) => {
-        if (key === 'imagenTarjetaUrl' || key === 'imagenHorarioUrl') {
-            if (value instanceof FileList && value.length > 0) {
-                formData.append(key, value[0]);
-            }
-        } else if (value !== null && value !== undefined) {
-             formData.append(key, String(value));
-        }
-    });
+    const formData = new FormData(event.currentTarget);
+    if(route?.id) {
+        formData.append('id', route.id);
+    }
     formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
     formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
 
 
+    setIsSubmitting(true);
     try {
       await saveRoute(formData);
       toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
@@ -112,7 +108,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormField control={control} name="nombre" render={({ field }) => (
           <FormItem>
             <FormLabel>Nombre de la Ruta</FormLabel>
@@ -167,7 +163,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
                   </div>
               )}
               <FormControl>
-                  <Input type="file" {...form.register('imagenTarjetaUrl')} />
+                  <Input type="file" {...register('imagenTarjetaUrl')} />
               </FormControl>
               <FormDescription>Subir una nueva imagen sobreescribirá la actual.</FormDescription>
               <FormMessage />
@@ -180,7 +176,7 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
                   </div>
               )}
               <FormControl>
-                   <Input type="file" {...form.register('imagenHorarioUrl')} />
+                   <Input type="file" {...register('imagenHorarioUrl')} />
               </FormControl>
                <FormDescription>Subir una nueva imagen sobreescribirá la actual.</FormDescription>
               <FormMessage />
@@ -238,13 +234,13 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
               <TableHead>Categoría</TableHead>
               <TableHead>Duración</TableHead>
               <TableHead>Tarifa</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="text-right w-[140px]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {routes.map((route) => (
               <TableRow key={route.id}>
-                <TableCell className="font-medium">{route.nombre}</TableCell>
+                <TableCell className="font-medium">{route.nombre} {route.especificacion && <span className="text-xs text-muted-foreground">({route.especificacion})</span>}</TableCell>
                 <TableCell className="capitalize">{route.category}</TableCell>
                 <TableCell>{route.duracionMin} min</TableCell>
                 <TableCell>₡{route.tarifaCRC}</TableCell>
@@ -287,6 +283,9 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selectedRoute?.id ? 'Editar Ruta' : 'Nueva Ruta'}</DialogTitle>
+            <DialogDescription>
+                Completa los detalles de la ruta. Haz clic en guardar cuando termines.
+            </DialogDescription>
           </DialogHeader>
           <RouteForm route={selectedRoute} onSave={onDataChange} onOpenChange={setIsDialogOpen} />
         </DialogContent>
@@ -294,3 +293,4 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
     </Card>
   );
 }
+
