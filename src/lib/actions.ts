@@ -1,61 +1,14 @@
-
 'use server';
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import fs from 'fs/promises';
-import path from 'path';
 import type { Route, Alert, Driver } from './definitions';
 import { initializeFirebase as initializeServerFirebase } from '@/firebase/server';
 import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, collection } from 'firebase/firestore';
 
-import * as admin from 'firebase-admin';
-
-// --- Firebase Admin Initialization ---
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
-
-if (!admin.apps.length) {
-  if (serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: `${serviceAccount.project_id}.appspot.com`,
-    });
-  } else if (process.env.NODE_ENV === 'development') {
-    // In dev, it might connect via application default credentials
-    console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not set. Using application default credentials for Firebase Admin.");
-    admin.initializeApp();
-  } else {
-    // In prod, rely on App Hosting's auto-configuration
-    admin.initializeApp();
-  }
-}
-
-async function uploadFileToStorage(file: File): Promise<string> {
-    const bucket = admin.storage().bucket();
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const uniqueFilename = `route-images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    
-    const storageFile = bucket.file(uniqueFilename);
-
-    await storageFile.save(fileBuffer, {
-        metadata: {
-            contentType: file.type,
-        },
-    });
-
-    // Make the file publicly accessible
-    await storageFile.makePublic();
-
-    // Return the public URL
-    return storageFile.publicUrl();
-}
+import { initializeFirebaseAdmin } from '@/firebase/admin';
 
 // --- Data Access Helpers ---
-const dataFilePath = (filename: string) => path.join(process.cwd(), 'src', 'data', filename);
-
-
 const createSlug = (name: string) => {
   return name
     .toLowerCase()
@@ -74,6 +27,24 @@ const routeSchema = z.object({
   tarifaCRC: z.coerce.number().min(0, "La tarifa no puede ser negativa."),
 });
 
+
+async function uploadFileToStorage(file: File): Promise<string> {
+    const { admin } = initializeFirebaseAdmin();
+    const bucket = admin.storage().bucket();
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uniqueFilename = `route-images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    
+    const storageFile = bucket.file(uniqueFilename);
+
+    await storageFile.save(fileBuffer, {
+        metadata: {
+            contentType: file.type,
+        },
+    });
+
+    await storageFile.makePublic();
+    return storageFile.publicUrl();
+}
 
 export async function saveRoute(formData: FormData) {
     const { firestore } = initializeServerFirebase();
@@ -217,7 +188,7 @@ export async function deleteDriver(id: string) {
 
 // --- Data Migration Action ---
 async function readJsonData(filename: string) {
-  const filePath = dataFilePath(filename);
+  const filePath = path.join(process.cwd(), 'src', 'data', filename);
   try {
     const jsonData = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(jsonData);
