@@ -1,44 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoutesManager from "@/components/admin/RoutesManager";
 import AlertsManager from "@/components/admin/AlertsManager";
 import DriversManager from "@/components/admin/DriversManager";
-import type { Route, Alert, Driver } from "@/lib/definitions";
-import { DataMigration } from "./DataMigration";
-import { useData } from "@/lib/data-service";
+import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
+import type { Route, Alert, Driver } from "@/lib/definitions";
+import { useEffect } from "react";
+import routesData from '@/data/routes.json';
+import alertsData from '@/data/alerts.json';
+import driversData from '@/data/drivers.json';
 
 export default function AdminDashboard() {
     const [routes, setRoutes] = useState<Route[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
-    const { getRoutes, getAlerts, getDrivers } = useData();
 
     useEffect(() => {
-        async function loadData() {
-            setLoading(true);
-            const [routesData, alertsData, driversData] = await Promise.all([
-                getRoutes(),
-                getAlerts(),
-                getDrivers(),
-            ]);
-            setRoutes(routesData);
-            setAlerts(alertsData);
-            setDrivers(driversData);
-            setLoading(false);
-        }
-        loadData();
-    }, [getRoutes, getAlerts, getDrivers]);
+        setLoading(true);
+        setRoutes(routesData as Route[]);
+        setAlerts(alertsData as Alert[]);
+        setDrivers(driversData as Driver[]);
+        setLoading(false);
+    }, []);
 
 
   if (loading) {
     return (
         <div className="space-y-4">
           <Skeleton className="h-10 w-96 mx-auto" />
-          <DataMigration />
           <Skeleton className="h-96 w-full" />
         </div>
       );
@@ -53,7 +46,6 @@ export default function AdminDashboard() {
             <TabsTrigger value="drivers">Gestionar Choferes</TabsTrigger>
             </TabsList>
         </div>
-        <DataMigration />
         <TabsContent value="routes">
             <RoutesManager routes={routes} />
         </TabsContent>

@@ -7,23 +7,21 @@ import { Alert as AlertUI, AlertDescription, AlertTitle } from "@/components/ui/
 import { Section, SectionHeader } from "@/components/shared/Section";
 import type { Alert } from "@/lib/definitions";
 import { Card } from '../ui/card';
-import { useData } from '@/lib/data-service';
 import { Skeleton } from '../ui/skeleton';
+import alertsData from '@/data/alerts.json';
 
 export function AlertsSection() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const { getAlerts } = useData();
 
   useEffect(() => {
     async function loadAlerts() {
       setLoading(true);
-      const fetchedAlerts = await getAlerts();
-      setAlerts(fetchedAlerts);
+      setAlerts(alertsData as Alert[]);
       setLoading(false);
     }
     loadAlerts();
-  }, [getAlerts]);
+  }, []);
 
   return (
     <Section id="alertas">

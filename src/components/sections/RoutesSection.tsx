@@ -8,24 +8,19 @@ import { Section, SectionHeader } from "@/components/shared/Section";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
 import type { Route } from "@/lib/definitions";
 import { Separator } from "../ui/separator";
-import { useData } from "@/lib/data-service";
 import { Skeleton } from "../ui/skeleton";
+import routesData from '@/data/routes.json';
 
 export function RoutesSection() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [loading, setLoading] = useState(true);
-  const { getRoutes } = useData();
 
   useEffect(() => {
-    async function loadRoutes() {
-      setLoading(true);
-      const fetchedRoutes = await getRoutes();
-      setRoutes(fetchedRoutes);
-      setLoading(false);
-    }
-    loadRoutes();
-  }, [getRoutes]);
+    // Simulate loading data
+    setRoutes(routesData as Route[]);
+    setLoading(false);
+  }, []);
 
   const greciaRoutes = useMemo(() => {
     return routes.filter(
