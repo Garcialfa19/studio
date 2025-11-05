@@ -7,7 +7,7 @@
     "duracionMin": 60,
     "tarifaCRC": 650,
     "imagenHorarioUrl": "/uploads/schedules/1761341417464-Unknown.jpeg",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/gp/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus1/600/400",
     "activo": true,
     "lastUpdated": "2025-10-24T21:30:17.468Z"
   },
@@ -18,7 +18,7 @@
     "duracionMin": 60,
     "tarifaCRC": 650,
     "imagenHorarioUrl": "/uploads/schedules/1761341440154-Unknown.jpeg",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/sp/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus2/600/400",
     "activo": true,
     "lastUpdated": "2025-10-24T21:30:40.157Z"
   },
@@ -29,7 +29,7 @@
     "duracionMin": 30,
     "tarifaCRC": 450,
     "imagenHorarioUrl": "/uploads/schedules/1761341451130-Unknown.jpeg",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/gs/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus3/600/400",
     "activo": true,
     "lastUpdated": "2025-10-24T21:30:51.134Z"
   },
@@ -40,7 +40,7 @@
     "duracionMin": 45,
     "tarifaCRC": 500,
     "imagenHorarioUrl": "/uploads/schedules/placeholder.png",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/ng/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus4/600/400",
     "activo": false,
     "lastUpdated": "2024-07-28T10:15:00Z"
   },
@@ -51,7 +51,7 @@
     "duracionMin": 130,
     "tarifaCRC": 1500,
     "imagenHorarioUrl": "/uploads/schedules/1761341463972-Unknown.jpeg",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/spg/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus5/600/400",
     "activo": true,
     "lastUpdated": "2025-10-24T21:31:03.974Z"
   },
@@ -62,7 +62,7 @@
     "duracionMin": 25,
     "tarifaCRC": 400,
     "imagenHorarioUrl": "https://images.unsplash.com/photo-1755699877166-c236690d9fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/sn/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus6/600/400",
     "activo": true,
     "lastUpdated": "2025-10-28T10:15:00Z"
   },
@@ -73,7 +73,7 @@
     "duracionMin": 40,
     "tarifaCRC": 550,
     "imagenHorarioUrl": "https://images.unsplash.com/photo-1620841946140-f6b5e40ce49a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXMlMjBzY2hlZHVsZXxlbnwwfHx8fDE3NjEyNTY1Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "imagenTarjetaUrl": "https://picsum.photos/seed/ssp/600/400",
+    "imagenTarjetaUrl": "https://picsum.photos/seed/bus7/600/400",
     "activo": true,
     "lastUpdated": "2025-10-28T10:16:00Z"
   }

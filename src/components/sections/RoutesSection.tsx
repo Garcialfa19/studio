@@ -56,6 +56,7 @@ export function RoutesSection({ initialRoutes }: RoutesSectionProps) {
                     alt={`Autobús de la ruta ${route.nombre}`}
                     fill
                     className="object-cover rounded-md"
+                    data-ai-hint="transport bus"
                 />
               </div>
               <CardContent className="p-4 pt-0 flex flex-col flex-grow">
