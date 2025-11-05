@@ -1,14 +1,12 @@
 'use client';
 import AdminDashboard from "@/components/admin/AdminDashboard";
-import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import Link from "next/link";
 import { useAuth } from "@/firebase";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { type Route, type Alert, type Driver } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -16,40 +14,12 @@ export default function DashboardPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-
   useEffect(() => {
     if (!loading && !user) {
       router.push('/admin');
     }
   }, [user, loading, router]);
   
-  useEffect(() => {
-    async function loadData() {
-      if(user) {
-        try {
-          setDataLoading(true);
-          const [routesData, alertsData, driversData] = await Promise.all([
-            getRoutes(),
-            getAlerts(),
-            getDrivers(),
-          ]);
-          setRoutes(routesData);
-          setAlerts(alertsData);
-          setDrivers(driversData);
-        } catch (error) {
-          console.error("Failed to load dashboard data", error);
-        } finally {
-          setDataLoading(false);
-        }
-      }
-    }
-    loadData();
-  }, [user]);
-
   const handleLogout = async () => {
     await logout();
     router.push('/admin');
@@ -82,14 +52,7 @@ export default function DashboardPage() {
           </div>
       </header>
       <main className="p-4 sm:px-6 sm:py-0">
-        {dataLoading ? (
-           <div className="space-y-4">
-              <Skeleton className="h-10 w-96" />
-              <Skeleton className="h-96 w-full" />
-            </div>
-        ) : (
-          <AdminDashboard initialRoutes={routes} initialAlerts={alerts} initialDrivers={drivers} />
-        )}
+          <AdminDashboard />
       </main>
     </div>
   );

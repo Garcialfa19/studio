@@ -1,26 +1,44 @@
 
 "use client";
 
+import { useEffect, useState } from 'react';
 import { Info, BellRing } from 'lucide-react';
 import { Alert as AlertUI, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, SectionHeader } from "@/components/shared/Section";
 import type { Alert } from "@/lib/definitions";
 import { Card } from '../ui/card';
+import { useData } from '@/lib/data-service';
+import { Skeleton } from '../ui/skeleton';
 
-type AlertsSectionProps = {
-  initialAlerts: Alert[];
-};
+export function AlertsSection() {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { getAlerts } = useData();
 
-export function AlertsSection({ initialAlerts }: AlertsSectionProps) {
+  useEffect(() => {
+    async function loadAlerts() {
+      setLoading(true);
+      const fetchedAlerts = await getAlerts();
+      setAlerts(fetchedAlerts);
+      setLoading(false);
+    }
+    loadAlerts();
+  }, [getAlerts]);
 
   return (
     <Section id="alertas">
       <SectionHeader title="Alertas y Anuncios" />
       
-      {initialAlerts.length > 0 ? (
+      {loading ? (
+        <Card className="max-w-2xl mx-auto p-6 space-y-4">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-5/6" />
+          <Skeleton className="h-6 w-full" />
+        </Card>
+      ) : alerts.length > 0 ? (
         <Card className="max-w-2xl mx-auto">
             <ul className="p-6 space-y-4">
-            {initialAlerts.map(alert => (
+            {alerts.map(alert => (
                 <li key={alert.id} className="flex items-start gap-4">
                     <Info className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                     <p className="text-foreground">{alert.titulo}</p>

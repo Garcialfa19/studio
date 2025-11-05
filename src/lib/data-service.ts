@@ -1,18 +1,23 @@
-'use server';
+'use client';
 
 import { getFirestore, collection, getDocs, orderBy, query } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import type { Route, Alert, Driver } from './definitions';
 
-// Initialize Firebase
-const { firestore } = initializeFirebase();
+// This is a client-side data service.
+// It uses the useFirebase hook to get the Firestore instance.
 
-async function readData<T>(collectionName: string): Promise<T[]> {
+async function readData<T>(firestore: any, collectionName: string): Promise<T[]> {
+  if (!firestore) {
+    console.error("Firestore not initialized");
+    return [];
+  }
   try {
     const dbCollection = collection(firestore, collectionName);
     const q = query(dbCollection, orderBy("lastUpdated", "desc"));
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
+      console.log(`No documents found in ${collectionName}`);
       return [];
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
@@ -24,14 +29,21 @@ async function readData<T>(collectionName: string): Promise<T[]> {
   }
 }
 
-export async function getRoutes(): Promise<Route[]> {
-  return readData<Route>('routes');
-}
 
-export async function getAlerts(): Promise<Alert[]> {
-  return readData<Alert>('alerts');
-}
+export function useData() {
+    const { firestore } = useFirebase();
 
-export async function getDrivers(): Promise<Driver[]> {
-    return readData<Driver>('drivers');
+    const getRoutes = async (): Promise<Route[]> => {
+        return readData<Route>(firestore, 'routes');
+    }
+
+    const getAlerts = async (): Promise<Alert[]> => {
+        return readData<Alert>(firestore, 'alerts');
+    }
+
+    const getDrivers = async (): Promise<Driver[]> => {
+        return readData<Driver>(firestore, 'drivers');
+    }
+
+    return { getRoutes, getAlerts, getDrivers };
 }
