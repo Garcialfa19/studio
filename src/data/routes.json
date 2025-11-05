@@ -42,49 +42,5 @@
     "imagenTarjetaUrl": "https://picsum.photos/seed/bus4/600/400",
     "activo": true,
     "lastUpdated": "2024-05-19T11:00:00Z"
-  },
-  {
-    "id": "",
-    "nombre": "test",
-    "category": "grecia",
-    "duracionMin": 12,
-    "tarifaCRC": 12,
-    "imagenHorarioUrl": "",
-    "imagenTarjetaUrl": "",
-    "activo": true,
-    "lastUpdated": "2025-11-05T06:02:45.879Z"
-  },
-  {
-    "id": "",
-    "nombre": "test",
-    "especificacion": "",
-    "category": "grecia",
-    "duracionMin": 2,
-    "tarifaCRC": 2,
-    "imagenTarjetaUrl": "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
-    "imagenHorarioUrl": "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
-    "lastUpdated": "2025-11-05T06:11:14.976Z"
-  },
-  {
-    "id": "",
-    "nombre": "test",
-    "especificacion": "test",
-    "category": "grecia",
-    "duracionMin": 1,
-    "tarifaCRC": 1,
-    "imagenTarjetaUrl": "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
-    "imagenHorarioUrl": "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
-    "lastUpdated": "2025-11-05T06:11:41.655Z"
-  },
-  {
-    "id": "",
-    "nombre": "test",
-    "especificacion": "",
-    "category": "grecia",
-    "duracionMin": 1,
-    "tarifaCRC": 1,
-    "imagenTarjetaUrl": "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
-    "imagenHorarioUrl": "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
-    "lastUpdated": "2025-11-05T06:11:57.199Z"
   }
 ]
