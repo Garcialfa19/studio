@@ -69,9 +69,9 @@ export async function saveRoute(formData: FormData) {
     const { data } = validatedFields;
     const routes = await readData<Route>('routes.json');
     const now = new Date().toISOString();
-
-    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string || 'https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen';
-    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string || 'https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario';
+    
+    let imagenTarjetaUrl = rawData.currentImagenTarjetaUrl as string;
+    let imagenHorarioUrl = rawData.currentImagenHorarioUrl as string;
 
     const cardImageFile = formData.get('imagenTarjetaUrl') as File | null;
     if (cardImageFile && cardImageFile.size > 0) {
@@ -102,8 +102,8 @@ export async function saveRoute(formData: FormData) {
             id: data.nombre.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
             ...data,
             especificacion: data.especificacion || '',
-            imagenTarjetaUrl: imagenTarjetaUrl,
-            imagenHorarioUrl: imagenHorarioUrl,
+            imagenTarjetaUrl: imagenTarjetaUrl || "https://placehold.co/600x400/EEE/31343C?text=Sin+Imagen",
+            imagenHorarioUrl: imagenHorarioUrl || "https://placehold.co/800x1200/EEE/31343C?text=Sin+Horario",
             lastUpdated: now,
         };
         routes.push(newRoute);
@@ -112,6 +112,7 @@ export async function saveRoute(formData: FormData) {
     await writeData('routes.json', routes);
     revalidatePath('/admin/dashboard');
     revalidatePath('/');
+    revalidatePath('/api/routes');
 }
 
 
@@ -121,6 +122,7 @@ export async function deleteRoute(id: string) {
   await writeData('routes.json', routes);
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
+  revalidatePath('/api/routes');
 }
 
 // Alert Actions
@@ -151,6 +153,7 @@ export async function saveAlert(alertData: Partial<Alert>) {
     await writeData('alerts.json', alerts);
     revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
+    revalidatePath('/api/alerts');
 }
 
 export async function deleteAlert(id: string) {
@@ -159,6 +162,7 @@ export async function deleteAlert(id: string) {
     await writeData('alerts.json', alerts);
     revalidatePath('/admin/dashboard');
     revalidatePath('/alertas');
+    revalidatePath('/api/alerts');
 }
 
 
@@ -193,6 +197,7 @@ export async function saveDriver(driverData: Partial<Driver>) {
     
     await writeData('drivers.json', drivers);
     revalidatePath('/admin/dashboard');
+    revalidatePath('/api/drivers');
 }
 
 export async function deleteDriver(id: string) {
@@ -200,4 +205,5 @@ export async function deleteDriver(id: string) {
     drivers = drivers.filter(d => d.id !== id);
     await writeData('drivers.json', drivers);
     revalidatePath('/admin/dashboard');
+    revalidatePath('/api/drivers');
 }
