@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Trash2 } from "lucide-react";
 import type { Alert } from "@/lib/definitions";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { createAlert, deleteAlert } from "@/lib/data-service-client";
+import { dataService } from "@/lib/data-service-client";
 
 const alertSchema = z.object({
   id: z.string().optional(),
@@ -48,7 +48,7 @@ const AlertForm = ({ onSave, onOpenChange }: { onSave: () => void, onOpenChange:
 
   async function onSubmit(data: AlertFormValues) {
     try {
-      await createAlert({ titulo: data.titulo });
+      await dataService.addAlert({ titulo: data.titulo });
       toast({ title: "Alerta guardada", description: "La alerta se ha guardado correctamente." });
       onSave();
       onOpenChange(false);
@@ -83,7 +83,7 @@ export default function AlertsManager({ alerts, onDataChange }: { alerts: Alert[
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteAlert(id);
+      await dataService.deleteAlert(id);
       toast({ title: "Alerta eliminada", description: "La alerta se ha eliminado." });
       onDataChange();
     } catch (error) {

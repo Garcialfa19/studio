@@ -36,7 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import type { Driver, Route } from "@/lib/definitions";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { createDriver, updateDriver, deleteDriver } from "@/lib/data-service-client";
+import { dataService } from "@/lib/data-service-client";
 
 const driverSchema = z.object({
   id: z.string().optional(),
@@ -80,9 +80,9 @@ const DriverForm = ({ driver, routes, onSave, onOpenChange }: { driver: Partial<
   async function onSubmit(data: DriverFormValues) {
     try {
       if (data.id) {
-        await updateDriver(data.id, data);
+        await dataService.updateDriver(data.id, data);
       } else {
-        await createDriver(data);
+        await dataService.addDriver(data);
       }
       toast({ title: "Chofer guardado", description: "La información del chofer se ha guardado." });
       onSave();
@@ -171,7 +171,7 @@ export default function DriversManager({ drivers, routes, onDataChange }: { driv
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDriver(id);
+      await dataService.deleteDriver(id);
       toast({ title: "Chofer eliminado", description: "El chofer se ha eliminado." });
       onDataChange();
     } catch (error) {

@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -27,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Edit, Trash2, ExternalLink } from "lucide-react";
 import type { Route } from "@/lib/definitions";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,30 +38,47 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { createRoute, updateRoute, deleteRoute } from "@/lib/data-service-client";
+import { dataService, storageService } from "@/lib/data-service-client";
 
 const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | null, onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
     const isEditing = !!route?.id;
 
-    // Append current image URLs if they exist, to prevent them from being wiped out
-    if (isEditing) {
-        formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
-        formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
-    }
+    let imageUrl = route?.imageUrl || "";
+    let imagePath = route?.imagePath || "";
 
     try {
+        if (imageFile) {
+            if (isEditing && route.imagePath) {
+                await storageService.deleteFile(route.imagePath);
+            }
+            const { downloadURL, path } = await storageService.uploadFile(imageFile, `routes/${Date.now()}_${imageFile.name}`);
+            imageUrl = downloadURL;
+            imagePath = path;
+        }
+
+        const formData = {
+            nombre: form.nombre.value,
+            especificacion: form.especificacion.value,
+            category: form.category.value,
+            duracionMin: Number(form.duracionMin.value),
+            tarifaCRC: Number(form.tarifaCRC.value),
+            imageUrl,
+            imagePath,
+        };
+
       if (isEditing) {
-        await updateRoute(route.id!, formData);
+        await dataService.updateRoute(route.id!, formData);
       } else {
-        await createRoute(formData);
+        await dataService.addRoute(formData);
       }
       toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
       onSave();
@@ -110,28 +126,10 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
             <Input id="tarifaCRC" name="tarifaCRC" type="number" defaultValue={route?.tarifaCRC ?? 0} required />
           </div>
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="imagenTarjetaUrl">Imagen de Tarjeta</Label>
-              {route?.imagenTarjetaUrl && (
-                  <div className="relative w-full h-24 mb-2">
-                      <Image src={route.imagenTarjetaUrl} alt="Vista previa de tarjeta" layout="fill" objectFit="contain" className="rounded-md border" />
-                  </div>
-              )}
-              <Input id="imagenTarjetaUrl" name="imagenTarjetaUrl" type="file" accept="image/*" />
-              <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="imagenHorarioUrl">Imagen de Horario</Label>
-               {route?.imagenHorarioUrl && (
-                  <div className="relative w-full h-24 mb-2">
-                      <Image src={route.imagenHorarioUrl} alt="Vista previa de horario" layout="fill" objectFit="contain" className="rounded-md border" />
-                  </div>
-              )}
-              <Input id="imagenHorarioUrl" name="imagenHorarioUrl" type="file" accept="image/*" />
-              <p className="text-sm text-muted-foreground">Subir una nueva imagen sobreescribirá la actual.</p>
-            </div>
+        <div className="space-y-2">
+            <Label htmlFor="image">Imagen (Opcional)</Label>
+            <Input id="image" type="file" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />
+            {route?.imageUrl && <a href={route.imageUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">Ver imagen actual</a>}
         </div>
 
         <DialogFooter>
@@ -157,13 +155,16 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, imagePath?: string) => {
     try {
-      await deleteRoute(id);
-      toast({ title: "Ruta eliminada", description: "La ruta se ha eliminado correctamente." });
-      onDataChange();
+        await dataService.deleteRoute(id);
+        if (imagePath) {
+            await storageService.deleteFile(imagePath);
+        }
+        toast({ title: "Ruta eliminada", description: "La ruta se ha eliminado correctamente." });
+        onDataChange();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo eliminar la ruta." });
+        toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo eliminar la ruta." });
     }
   };
 
@@ -197,7 +198,7 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
                 <TableCell>
                   <div className="flex justify-end items-center">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(route)}><Edit className="h-4 w-4" /></Button>
-                    <a href={`/#rutas`} target="_blank" rel="noopener noreferrer">
+                    <a href={`/mapa?route=${route.id}`} target="_blank" rel="noopener noreferrer">
                       <Button variant="ghost" size="icon"><ExternalLink className="h-4 w-4" /></Button>
                     </a>
                     <AlertDialog>
@@ -213,7 +214,7 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(route.id)} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleDelete(route.id, route.imagePath)} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

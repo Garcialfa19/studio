@@ -1,31 +1,10 @@
+import { app } from './firebase-client';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
-import { initializeFirebase } from '@/lib/firebase-client';
-import { getAuth } from 'firebase/auth';
+const auth = getAuth(app);
 
-export async function verifySession() {
-  const { auth } = initializeFirebase();
-  const user = auth.currentUser;
-
-  if (!user) {
-    return null;
-  }
-
-  const token = await user.getIdToken();
-
-  try {
-    const response = await fetch('/api/auth/session', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      return await response.json();
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error("Session verification failed:", error);
-    return null;
-  }
-}
+export const authService = {
+  signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+  signOut: () => signOut(auth),
+  onAuthStateChanged: (callback: (user: User | null) => void) => onAuthStateChanged(auth, callback),
+};

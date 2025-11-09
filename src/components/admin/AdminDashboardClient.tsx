@@ -6,8 +6,9 @@ import { Logo } from "@/components/shared/Logo";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Route, Alert, Driver } from "@/lib/definitions";
-import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service-client";
-import { useAuth } from "@/context/AuthContext";
+import { dataService } from "@/lib/data-service-client";
+import { authService } from "@/lib/auth-service";
+import { useFirebase } from "@/lib/firebase-client-provider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoutesManager from './RoutesManager';
@@ -17,12 +18,12 @@ import AlertsManager from './AlertsManager';
 export default function AdminDashboardClient() {
   const [data, setData] = useState<{ routes: Route[]; alerts: Alert[]; drivers: Driver[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { logout, user } = useAuth();
+  const { user } = useFirebase();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await authService.signOut();
       router.push('/admin');
     } catch (error) {
       console.error("Failed to log out", error);
@@ -32,12 +33,15 @@ export default function AdminDashboardClient() {
   const refreshData = async () => {
     setIsLoading(true);
     try {
-        const [routesData, alertsData, driversData] = await Promise.all([
-            getRoutes(),
-            getAlerts(),
-            getDrivers()
+        const [routesSnapshot, alertsSnapshot, driversSnapshot] = await Promise.all([
+            dataService.getRoutes(),
+            dataService.getAlerts(),
+            dataService.getDrivers()
         ]);
-        setData({ routes: routesData, alerts: alertsData, drivers: driversData });
+        const routes = routesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Route[];
+        const alerts = alertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Alert[];
+        const drivers = driversSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Driver[];
+        setData({ routes, alerts, drivers });
     } catch (error) {
         console.error("Failed to refresh data", error);
     } finally {
@@ -46,8 +50,10 @@ export default function AdminDashboardClient() {
   };
 
   useEffect(() => {
-    refreshData();
-  }, []);
+    if (user) {
+      refreshData();
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-muted/40">
