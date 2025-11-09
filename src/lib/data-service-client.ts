@@ -1,6 +1,8 @@
 import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const db = getFirestore();
+const storage = getStorage();
 
 const getCollection = (collectionName) => {
     return getDocs(collection(db, collectionName));
@@ -35,4 +37,17 @@ export const dataService = {
   addAlert: (alert) => addDocument("alerts", alert),
   updateAlert: (id, alert) => updateDocument("alerts", id, alert),
   deleteAlert: (id) => deleteDocument("alerts", id),
+};
+
+export const storageService = {
+    uploadFile: async (file, path) => {
+        const storageRef = ref(storage, path);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        return { downloadURL, path };
+    },
+    deleteFile: (path) => {
+        const storageRef = ref(storage, path);
+        return deleteObject(storageRef);
+    }
 };

@@ -9,7 +9,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  serverActions: true,
   images: {
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -30,9 +32,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       }
     ],
-  },
-  serverActions: {
-    bodySizeLimit: '2mb',
   }
 };
 

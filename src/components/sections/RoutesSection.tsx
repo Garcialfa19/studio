@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getRoutes } from '@/lib/data-service-client';
+import { dataService } from '@/lib/data-service-client';
 import type { Route } from '@/lib/definitions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScheduleModal } from "@/components/shared/ScheduleModal";
@@ -15,7 +15,11 @@ export function RoutesSection() {
   useEffect(() => {
     async function fetchRoutes() {
       try {
-        const fetchedRoutes = await getRoutes();
+        const snapshot = await dataService.getRoutes();
+        const fetchedRoutes: Route[] = [];
+        snapshot.forEach((doc) => {
+          fetchedRoutes.push({ id: doc.id, ...doc.data() } as Route);
+        });
         setRoutes(fetchedRoutes);
       } catch (err) {
         setError('No se pudieron cargar las rutas.');
@@ -46,7 +50,7 @@ export function RoutesSection() {
             {routes.map(route => (
               <Card key={route.id}>
                 <img
-                  src={route.imagenTarjetaUrl || '/placeholder.svg'}
+                  src={route.imageUrl || '/placeholder.svg'}
                   alt={`Imagen de la ruta ${route.nombre}`}
                   width={400}
                   height={250}
