@@ -1,8 +1,7 @@
+
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,26 +10,26 @@ import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service-client";
 import AdminDashboard from "./AdminDashboard";
 
 type AdminDashboardClientProps = {
-  initialData: {
+  initialDataPromise: Promise<{
     routes: Route[];
     alerts: Alert[];
     drivers: Driver[];
-  };
+  }>;
 };
 
-export default function AdminDashboardClient({ initialData }: AdminDashboardClientProps) {
-  const router = useRouter();
+export default function AdminDashboardClient({ initialDataPromise }: AdminDashboardClientProps) {
+  const [data, setData] = useState<{ routes: Route[], alerts: Alert[], drivers: Driver[] } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    initialDataPromise.then(initialData => {
+      setData(initialData);
+      setIsLoading(false);
+    });
+  }, [initialDataPromise]);
   
-  const [data, setData] = useState(initialData);
-  const [isDataLoading, setIsDataLoading] = useState(false);
-
-  const handleLogout = async () => {
-    // No auth system, so just redirect to home.
-    router.push('/');
-  };
-
   const refreshData = async () => {
-    setIsDataLoading(true);
+    setIsLoading(true);
     try {
         const [routesData, alertsData, driversData] = await Promise.all([
             getRoutes(),
@@ -41,7 +40,7 @@ export default function AdminDashboardClient({ initialData }: AdminDashboardClie
     } catch (error) {
         console.error("Failed to refresh data", error);
     } finally {
-        setIsDataLoading(false);
+        setIsLoading(false);
     }
   };
 
@@ -52,15 +51,9 @@ export default function AdminDashboardClient({ initialData }: AdminDashboardClie
             <Logo />
           </Link>
           <h1 className="text-xl font-bold font-headline tracking-tight">Panel de Administración</h1>
-          <div className="ml-auto flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Salir
-              </Button>
-          </div>
       </header>
       <main className="p-4 sm:px-6 sm:py-0">
-          {isDataLoading ? (
+          {isLoading || !data ? (
             <div className="space-y-4">
               <Skeleton className="h-10 w-96 mx-auto" />
               <Skeleton className="h-96 w-full" />

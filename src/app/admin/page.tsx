@@ -1,9 +1,11 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
-// Since there is no authentication, this page just redirects to the dashboard.
-export default function AdminLoginPage() {
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+// This page is no longer a login page. It just redirects to the dashboard.
+export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
