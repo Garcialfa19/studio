@@ -1,15 +1,27 @@
 
-import { NextResponse } from 'next/server';
-import { getAlerts } from '@/lib/data-service';
-import { unstable_noStore as noStore } from 'next/cache';
+import { db } from '@/lib/firebase-admin';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore/lite';
+import { NextRequest, NextResponse } from 'next/server';
+
+const alertsCollection = collection(db, 'alerts');
 
 export async function GET() {
-  noStore();
   try {
-    const alerts = await getAlerts();
+    const snapshot = await getDocs(alertsCollection);
+    const alerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(alerts);
   } catch (error) {
-    console.error('API Error fetching alerts:', error);
-    return NextResponse.json({ message: 'Failed to fetch alerts' }, { status: 500 });
+    return NextResponse.json({ message: 'Error fetching alerts', error }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const alert = await req.json();
+    const newAlertRef = doc(alertsCollection);
+    await setDoc(newAlertRef, alert);
+    return NextResponse.json({ id: newAlertRef.id, ...alert });
+  } catch (error) {
+    return NextResponse.json({ message: 'Error creating alert', error }, { status: 500 });
   }
 }

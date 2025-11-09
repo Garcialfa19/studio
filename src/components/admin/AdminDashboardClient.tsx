@@ -7,27 +7,28 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Route, Alert, Driver } from "@/lib/definitions";
 import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service-client";
-import AdminDashboard from "./AdminDashboard";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RoutesManager from './RoutesManager';
+import DriversManager from './DriversManager';
+import AlertsManager from './AlertsManager';
 
-type AdminDashboardClientProps = {
-  initialDataPromise: Promise<{
-    routes: Route[];
-    alerts: Alert[];
-    drivers: Driver[];
-  }>;
-};
-
-export default function AdminDashboardClient({ initialDataPromise }: AdminDashboardClientProps) {
-  const [data, setData] = useState<{ routes: Route[], alerts: Alert[], drivers: Driver[] } | null>(null);
+export default function AdminDashboardClient() {
+  const [data, setData] = useState<{ routes: Route[]; alerts: Alert[]; drivers: Driver[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { logout, user } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    initialDataPromise.then(initialData => {
-      setData(initialData);
-      setIsLoading(false);
-    });
-  }, [initialDataPromise]);
-  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/admin');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
+
   const refreshData = async () => {
     setIsLoading(true);
     try {
@@ -44,6 +45,10 @@ export default function AdminDashboardClient({ initialDataPromise }: AdminDashbo
     }
   };
 
+  useEffect(() => {
+    refreshData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-muted/40">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
@@ -51,6 +56,10 @@ export default function AdminDashboardClient({ initialDataPromise }: AdminDashbo
             <Logo />
           </Link>
           <h1 className="text-xl font-bold font-headline tracking-tight">Panel de Administración</h1>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm text-muted-foreground hidden sm:inline">Hola, {user?.email}</span>
+            <Button variant="outline" size="sm" onClick={handleLogout}>Cerrar Sesión</Button>
+          </div>
       </header>
       <main className="p-4 sm:px-6 sm:py-0">
           {isLoading || !data ? (
@@ -59,7 +68,16 @@ export default function AdminDashboardClient({ initialDataPromise }: AdminDashbo
               <Skeleton className="h-96 w-full" />
             </div>
           ) : (
-            <AdminDashboard initialData={data} onDataChange={refreshData} />
+            <Tabs defaultValue="routes">
+                <TabsList className="mb-4">
+                    <TabsTrigger value="routes">Rutas</TabsTrigger>
+                    <TabsTrigger value="drivers">Choferes</TabsTrigger>
+                    <TabsTrigger value="alerts">Alertas</TabsTrigger>
+                </TabsList>
+                <TabsContent value="routes"><RoutesManager routes={data.routes} onDataChange={refreshData} /></TabsContent>
+                <TabsContent value="drivers"><DriversManager drivers={data.drivers} routes={data.routes} onDataChange={refreshData} /></TabsContent>
+                <TabsContent value="alerts"><AlertsManager alerts={data.alerts} onDataChange={refreshData} /></TabsContent>
+            </Tabs>
           )}
       </main>
     </div>

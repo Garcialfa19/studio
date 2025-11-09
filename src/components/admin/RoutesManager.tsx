@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { saveRoute, deleteRoute } from "@/lib/actions";
+import { createRoute, updateRoute, deleteRoute } from "@/lib/data-service-client";
 
 const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | null, onSave: () => void, onOpenChange: (open: boolean) => void }) => {
   const { toast } = useToast();
@@ -50,29 +50,37 @@ const RouteForm = ({ route, onSave, onOpenChange }: { route: Partial<Route> | nu
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    
+    const isEditing = !!route?.id;
+
+    // Append current image URLs if they exist, to prevent them from being wiped out
+    if (isEditing) {
+        formData.append('currentImagenTarjetaUrl', route?.imagenTarjetaUrl || '');
+        formData.append('currentImagenHorarioUrl', route?.imagenHorarioUrl || '');
+    }
+
     try {
-      await saveRoute(formData);
+      if (isEditing) {
+        await updateRoute(route.id!, formData);
+      } else {
+        await createRoute(formData);
+      }
       toast({ title: "Ruta guardada", description: "La ruta se ha guardado correctamente." });
       onSave();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la ruta." });
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo guardar la ruta." });
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  // A new route will have an empty object, an existing one will have an ID.
   const isEditing = !!route?.id;
 
   return (
       <form onSubmit={handleSubmit} className="space-y-4">
         {isEditing && <input type="hidden" name="id" value={route.id} />}
-        <input type="hidden" name="currentImagenTarjetaUrl" value={route?.imagenTarjetaUrl || ''} />
-        <input type="hidden" name="currentImagenHorarioUrl" value={route?.imagenHorarioUrl || ''} />
-
+        
         <div className="space-y-2">
             <Label htmlFor="nombre">Nombre de la Ruta</Label>
             <Input id="nombre" name="nombre" defaultValue={route?.nombre || ""} required readOnly={isEditing} />
@@ -154,8 +162,8 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
       await deleteRoute(id);
       toast({ title: "Ruta eliminada", description: "La ruta se ha eliminado correctamente." });
       onDataChange();
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo eliminar la ruta." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo eliminar la ruta." });
     }
   };
 
@@ -182,7 +190,7 @@ export default function RoutesManager({ routes, onDataChange }: { routes: Route[
           <TableBody>
             {routes.map((route) => (
               <TableRow key={route.id}>
-                <TableCell className="font-medium">{route.nombre} {route.especificacion && <span className="text-xs text-muted-foreground">({route.especificacion})</span>}</TableCell>
+                <TableCell className="font-medium">{route.nombre} {route.especificacion && <span className="text-xs text-muted-foreground">({route.especificacion})</span>}</TableCell>                
                 <TableCell className="capitalize">{route.category}</TableCell>
                 <TableCell>{route.duracionMin} min</TableCell>
                 <TableCell>₡{route.tarifaCRC}</TableCell>

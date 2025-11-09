@@ -1,18 +1,16 @@
 
-'use client';
 import { getRoutes, getAlerts, getDrivers } from "@/lib/data-service";
-import AdminDashboardClient from "@/components/admin/AdminDashboardClient";
+import AdminDashboardPageClient from "./page.client";
 
-async function getInitialData() {
+// This is the main Server Component for the page.
+export default async function AdminDashboardPage() {
+  // 1. Fetch data on the server.
   const routes = await getRoutes();
   const alerts = await getAlerts();
   const drivers = await getDrivers();
-  return { routes, alerts, drivers };
-}
+  const initialData = { routes, alerts, drivers };
 
-
-export default function Page() {
-    // In a real-world scenario, you'd fetch this data.
-    // For this implementation, we pass a promise that resolves to the data.
-  return <AdminDashboardClient initialDataPromise={getInitialData()} />;
+  // 2. Render the top-level Client Component, passing the data as props.
+  // The client component will handle authentication and rendering the UI.
+  return <AdminDashboardPageClient initialData={initialData} />;
 }

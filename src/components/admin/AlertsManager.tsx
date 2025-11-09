@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -24,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { saveAlert, deleteAlert } from "@/lib/actions";
+import { createAlert, deleteAlert } from "@/lib/data-service-client";
 
 const alertSchema = z.object({
   id: z.string().optional(),
@@ -47,7 +48,7 @@ const AlertForm = ({ onSave, onOpenChange }: { onSave: () => void, onOpenChange:
 
   async function onSubmit(data: AlertFormValues) {
     try {
-      await saveAlert(data);
+      await createAlert({ titulo: data.titulo });
       toast({ title: "Alerta guardada", description: "La alerta se ha guardado correctamente." });
       onSave();
       onOpenChange(false);

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -47,7 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { saveDriver, deleteDriver } from "@/lib/actions";
+import { createDriver, updateDriver, deleteDriver } from "@/lib/data-service-client";
 
 const driverSchema = z.object({
   id: z.string().optional(),
@@ -78,7 +79,11 @@ const DriverForm = ({ driver, routes, onSave, onOpenChange }: { driver: Partial<
 
   async function onSubmit(data: DriverFormValues) {
     try {
-      await saveDriver(data);
+      if (data.id) {
+        await updateDriver(data.id, data);
+      } else {
+        await createDriver(data);
+      }
       toast({ title: "Chofer guardado", description: "La información del chofer se ha guardado." });
       onSave();
       onOpenChange(false);
